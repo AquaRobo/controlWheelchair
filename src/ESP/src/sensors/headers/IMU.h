@@ -11,12 +11,21 @@ class IMU {
     public:
         IMU();
         void begin();
-        std::vector<float> getRotations();
+        std::vector<float> getAccelerations();
+        std::vector<float> getGyroscope();
+        std::vector<float> getQuaternion();
 
     private:
-        float roll;
-        float pitch;
-        float yaw;
+        float accel_x;
+        float accel_y;
+        float accel_z;
+        float gyro_x;
+        float gyro_y;
+        float gyro_z;
+        float quat_x;
+        float quat_y;
+        float quat_z;
+        float quat_w;
 };
 
 #endif // IMU_H
