@@ -21,6 +21,7 @@ rcl_allocator_t allocator;
 rclc_executor_t executor;
 rcl_node_t sensors_node;
 rcl_timer_t timer;
+constexpr uint32_t TIMER_TIMEOUT_MS = 5u;
 
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
@@ -57,18 +58,16 @@ void setup(){
     &sensors_node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
     "IMU");
-    const unsigned int timer_timeout = 1000;
     rclc_timer_init_default(
     &timer,
     &support,
-    RCL_MS_TO_NS(timer_timeout),
+    RCL_MS_TO_NS(TIMER_TIMEOUT_MS),
     pubIMU);
     rclc_executor_init(&executor, &support.context, 1, &allocator);
     rclc_executor_add_timer(&executor, &timer);
 }
 
 void loop(){
-    delay(100);
-    RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+    RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(TIMER_TIMEOUT_MS)));
 }
 
