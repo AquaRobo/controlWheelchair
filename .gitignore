@@ -21,3 +21,4 @@ src/msgs/log/
 build/
 install/
 log/
+src/my_robot_hardware/
