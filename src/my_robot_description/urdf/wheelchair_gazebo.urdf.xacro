@@ -43,6 +43,9 @@
             <parameters>$(find my_robot_bringup)/config/my_wheelchair_controller.yaml</parameters>
         </plugin>
         <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+        </plugin>
     </gazebo>
 
     <!-- IMU -->
@@ -94,6 +97,40 @@
                     </z>
                 </linear_acceleration>
             </imu>
+        </sensor>
+    </gazebo>
+
+    <!--Lidar-->
+    <gazebo reference='lidar_r'>
+        <sensor name='laser' type='gpu_lidar'>
+            <visualize>true</visualize>
+            <pose relative_to='lidar_r'>0 0 0 0 0 0</pose>
+            <update_rate>10</update_rate>
+            <gz_frame_id>lidar_r</gz_frame_id>
+            <topic>lidar</topic>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-1.396263</min_angle>
+                        <max_angle>1.396263</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>1</samples>
+                        <resolution>0.01</resolution>
+                        <min_angle>0</min_angle>
+                        <max_angle>0</max_angle>
+                    </vertical>
+                </scan>
+                <range>
+                    <min>0.08</min>
+                    <max>10.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </ray>
+            <always_on>1</always_on>
+            <visualize>true</visualize>
         </sensor>
     </gazebo>
 

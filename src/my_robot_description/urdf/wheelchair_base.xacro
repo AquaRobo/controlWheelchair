@@ -134,8 +134,8 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="lf_2_joint" type="continuous">
-    <origin xyz="0.32552 0.38188 -0.5095" rpy="0 0 3.1416" />
+  <joint name="lf_2_joint" type="fixed">
+    <origin xyz="0.32552 0.38188 -0.5095" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="lf_2" />
     <axis xyz="0 0 -1" />
@@ -158,7 +158,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/lf_1.STL" />
+        <sphere radius="0.14"/>
       </geometry>
     </collision>
   </link>
@@ -190,7 +190,7 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="rf_2_joint" type="continuous">
+  <joint name="rf_2_joint" type="fixed">
     <origin xyz="0.32552 -0.38188 -0.5095" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="rf_2" />
@@ -214,7 +214,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/rf_1.STL" />
+        <sphere radius="0.14"/>
       </geometry>
     </collision>
   </link>
@@ -242,7 +242,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/rb_1.STL" />
+        <sphere radius="0.14"/>
       </geometry>
     </collision>
   </link>
@@ -270,7 +270,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/lb_1.STL" />
+        <sphere radius="0.14"/>
       </geometry>
     </collision>
   </link>

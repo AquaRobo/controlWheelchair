@@ -7,21 +7,21 @@
             <!-- <plugin>mock_components/GenericSystem</plugin> -->
             <param name="calculate_dynamics">true</param>
         </hardware>
-        <joint name="lf_2_joint">
+        <!-- <joint name="lf_2_joint">
             <command_interface name="velocity" />
             <state_interface name="position" />
             <state_interface name="velocity" />
-        </joint>
+        </joint> -->
         <joint name="lf_1_joint">
             <command_interface name="velocity" />
             <state_interface name="position" />
             <state_interface name="velocity" />
         </joint>
-        <joint name="rf_2_joint">
+        <!-- <joint name="rf_2_joint">
             <command_interface name="velocity" />
             <state_interface name="position" />
             <state_interface name="velocity" />
-        </joint>
+        </joint> -->
         <joint name="rf_1_joint">
             <command_interface name="velocity" />
             <state_interface name="position" />
