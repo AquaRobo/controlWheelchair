@@ -4,6 +4,8 @@ Stephen Brawner (brawner@gmail.com)
      Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot name="Wheelchair_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find my_robot_description)/urdf/wheelchair_gazebo.urdf.xacro" />
+
   <link name="base_link">
     <inertial>
       <origin xyz="-0.1407 -0.006319 -0.18101" rpy="0 0 0" />
@@ -281,9 +283,11 @@ Stephen Brawner (brawner@gmail.com)
 
   <link name="imu_link">
     <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+      <origin xyz="-0.00552433659106688 0.000168210391520346 0.000514000497342681" rpy="0 0 0" />
+      <mass value="0.000528415362211671" />
+      <inertia ixx="1.46176048428261E-08" ixy="1.40015117949421E-10" ixz="-1.99633872937403E-12"
+               iyy="8.59662482954888E-09" iyz="7.52375112767959E-12"
+               izz="2.30279421279312E-08" />
     </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -293,17 +297,17 @@ Stephen Brawner (brawner@gmail.com)
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
-      <collision>
+    </visual>
+    <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
         <mesh filename="file://$(find my_robot_description)/meshes/imu_link.STL" />
       </geometry>
     </collision>
-    </visual>
   </link>
 
   <joint name="imu_joint" type="fixed">
-    <origin xyz="0 0 -0.0698986241758014" rpy="0 0 0" />
+    <origin xyz="0 0 -0.07" rpy="0 0 0" />
     <parent link="base_link"/>
     <child link="imu_link"/>
     <axis xyz="0 0 0" />

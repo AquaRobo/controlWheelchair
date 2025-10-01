@@ -5,7 +5,7 @@
         <hardware>
             <plugin>gz_ros2_control/GazeboSimSystem</plugin>
             <!-- <plugin>mock_components/GenericSystem</plugin> -->
-            <!-- <param name="calculate_dynamics">true</param> -->
+            <param name="calculate_dynamics">true</param>
         </hardware>
         <joint name="lf_2_joint">
             <command_interface name="velocity" />
