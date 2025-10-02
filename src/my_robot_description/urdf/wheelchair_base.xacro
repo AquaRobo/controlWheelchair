@@ -158,7 +158,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <sphere radius="0.14"/>
+        <mesh filename="file://$(find my_robot_description)/meshes/lf_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -214,7 +214,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <sphere radius="0.14"/>
+        <mesh filename="file://$(find my_robot_description)/meshes/rf_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -242,7 +242,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <sphere radius="0.14"/>
+        <mesh filename="file://$(find my_robot_description)/meshes/rb_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -270,7 +270,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <sphere radius="0.14"/>
+        <mesh filename="file://$(find my_robot_description)/meshes/lb_1.STL" />
       </geometry>
     </collision>
   </link>
