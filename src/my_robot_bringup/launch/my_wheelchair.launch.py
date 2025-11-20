@@ -82,9 +82,10 @@ def generate_launch_description():
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             #"/lidar@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
            # "/lidar/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
-            "/depth_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-            "/depth_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
-            "/depth_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            '/rgbd_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/rgbd_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/rgbd_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/rgbd_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked'
         ],
         # remappings=[
         #     ('/imu', '/imu/out'),

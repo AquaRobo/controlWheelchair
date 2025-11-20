@@ -116,9 +116,10 @@ def generate_launch_description():
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            '/depth_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
-            '/depth_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',  # matches Gazebo
+            '/rgbd_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/rgbd_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/rgbd_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/rgbd_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked'
         ],
         remappings=[('/imu', '/imu/out')],
         output='screen',
@@ -131,12 +132,11 @@ def generate_launch_description():
     name='depthimage_to_laserscan',
     output='screen',
     remappings=[
-        ('/depth_camera/points','depth' ),  # Depth image input
-        ('scan', '/scan'),                     # LaserScan output
+        ('/depth_camera_info', '/rgbd_camera/camera_info'),
+        ('/depth',  '/rgbd_camera/depth_image'),
     ],
     parameters=[{
         'output_frame': 'base_link',
-        'camera_info_topic': '/depth_camera/camera_info',
         'range_min': 0.1,
         'range_max': 10.0,
         'scan_height': 1,
@@ -175,8 +175,8 @@ def generate_launch_description():
         delayed_diff_drive_spawner,
         spawn_entity,
         # Added static TFs
-        static_tf_base_to_camera,
-        static_tf_camera_to_optical,
+        # static_tf_base_to_camera,
+        # static_tf_camera_to_optical,
         gz_ros2_bridge,
         depth_to_scan,
         slam_toolbox_node,

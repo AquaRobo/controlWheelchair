@@ -312,4 +312,33 @@ Stephen Brawner (brawner@gmail.com)
     <child link="imu_link"/>
     <axis xyz="0 0 0" />
   </joint>
+
+  <link name="camera_link">
+    <inertial>
+      <origin xyz="0 0 -0.05" rpy="0 0 0" />
+      <mass value="0.035" />
+      <inertia ixx="4.3746E-06" ixy="-1.4987E-22" ixz="-1.9058E-21" iyy="4.3746E-06" iyz="4.5539E-23" izz="4.4197E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.015 0.130 0.022"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.015 0.130 0.022"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="-0.43298 0 0.61687" rpy="0 -0.10674 0" />
+    <parent link="base_link" />
+    <child link="camera_link" />
+    <axis xyz="0 0 0" />
+  </joint>
 </robot>

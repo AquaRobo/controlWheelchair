@@ -12,6 +12,7 @@ Panels:
         - /LaserScan1
         - /LaserScan1/Topic1
         - /Camera1
+        - /PointCloud21
         - /Image1
       Splitter Ratio: 0.5
     Tree Height: 236
@@ -60,6 +61,11 @@ Visualization Manager:
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
         base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -131,6 +137,8 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
+        camera_link:
+          Value: true
         imu_link:
           Value: true
         lb_1:
@@ -160,6 +168,8 @@ Visualization Manager:
       Show Names: false
       Tree:
         base_link:
+          camera_link:
+            {}
           imu_link:
             {}
           lb_1:
@@ -212,7 +222,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /lidar/out
+        Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -222,12 +232,12 @@ Visualization Manager:
       Image Rendering: background and overlay
       Name: Camera
       Overlay Alpha: 0.5
-      Topic: /depth_camera/image_raw
-        # Depth: 5
-        # Durability Policy: Volatile
-        # History Policy: Keep Last
-        # Reliability Policy: Reliable
-        # Value: /depth_camera/image_raw
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rgbd_camera/image
       Value: true
       Visibility:
         Grid: true
@@ -262,12 +272,12 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /depth_camera/points
-        # Depth: 5
-        # Durability Policy: Volatile
-        # History Policy: Keep Last
-        # Reliability Policy: Reliable
-        # Value: /depth_camera/points
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rgbd_camera/points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -283,7 +293,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /depth_camera/image_raw
+        Value: /rgbd_camera/image
       Value: true
   Enabled: true
   Global Options:
@@ -315,10 +325,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3650000989437103
+      Pitch: 0.3749999403953552
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.4499932825565338
+      Yaw: 2.634989023208618
     Saved: ~
 Window Geometry:
   Camera:
