@@ -1,0 +1,43 @@
+slam_toolbox:
+  ros__parameters:
+    use_sim_time: true
+
+    # SLAM mode
+    mode: mapping  # mapping | localization
+
+    # Frames
+    map_frame: map
+    odom_frame: odom
+    base_frame: base_link   # must match your robot's base frame
+
+    # Topics
+    scan_topic: /scan       # matches depthimage_to_laserscan output
+    use_scan_matching: true
+    use_odometry: true
+    use_pose_extrapolator: true
+
+    # Map configuration
+    resolution: 0.05         # 5 cm per cell
+    max_laser_range: 10.0    # match depth image max range
+    minimum_time_interval: 0.5
+    transform_publish_period: 0.05
+    map_update_interval: 1.0  # map update every 1 sec
+
+    # Optimization
+    optimization_frequency: 0.5   # slightly higher for faster convergence
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+
+    # Scan matching parameters (tune for depth scans)
+    scan_matcher_linear_update: 0.2
+    scan_matcher_angular_update: 0.1
+    scan_matcher_translation_weight: 1.0
+    scan_matcher_rotation_weight: 1.0
+    scan_matcher_use_scan_interpolation: true
+
+    # Serialization
+    enable_interactive_mode: false
+
+    # Optional: for visualizing map in RViz faster
+    publish_period_sec: 0.1

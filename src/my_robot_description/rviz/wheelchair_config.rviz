@@ -222,12 +222,12 @@ Visualization Manager:
       Image Rendering: background and overlay
       Name: Camera
       Overlay Alpha: 0.5
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /depth_camera/image_raw
+      Topic: /depth_camera/image_raw
+        # Depth: 5
+        # Durability Policy: Volatile
+        # History Policy: Keep Last
+        # Reliability Policy: Reliable
+        # Value: /depth_camera/image_raw
       Value: true
       Visibility:
         Grid: true
@@ -262,12 +262,12 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /depth_camera/points
+      Topic: /depth_camera/points
+        # Depth: 5
+        # Durability Policy: Volatile
+        # History Policy: Keep Last
+        # Reliability Policy: Reliable
+        # Value: /depth_camera/points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
