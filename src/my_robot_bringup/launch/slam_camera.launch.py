@@ -1,11 +1,12 @@
 import os
 from ament_index_python.packages import get_package_share_path, get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, TimerAction, RegisterEventHandler
 from launch.substitutions import Command, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.event_handlers import OnProcessStart
 
 def generate_launch_description():
     # === Paths ===
@@ -26,13 +27,6 @@ def generate_launch_description():
     set_gz_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=f'{pkg_worlds}/models:{pkg_worlds}/custom_map'
-    )
-
-    # === Launch argument: delay for diff drive controller spawn ===
-    diff_drive_delay_arg = DeclareLaunchArgument(
-        'diff_drive_spawn_delay',
-        default_value='8.0',
-        description='Delay before spawning diff_drive controller (seconds)'
     )
 
     # === Robot State Publisher ===
@@ -65,11 +59,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    delayed_diff_drive_spawner = TimerAction(
-        period=LaunchConfiguration('diff_drive_spawn_delay'),
-        actions=[diff_drive_spawner]
-    )
-
     # === Start Gazebo ===
     start_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -92,21 +81,17 @@ def generate_launch_description():
         ],
     )
 
-    # === Static transforms for camera ===
-    # Added to match depthimage_to_laserscan expected frame
-    static_tf_base_to_camera = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'lidar_t'],
-        output='screen'
-    )
+    delayed_joint_state_spawner = RegisterEventHandler(
+    event_handler=OnProcessStart(
+        target_action=spawn_entity,
+        on_start=[TimerAction(period=12.0, actions=[joint_state_spawner])],
+    ))
 
-    static_tf_camera_to_optical = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'lidar_t'],
-        output='screen'
-    )
+    delayed_diff_drive_spawner = RegisterEventHandler(
+    event_handler=OnProcessStart(
+        target_action=joint_state_spawner,
+        on_start=[TimerAction(period=3.0, actions=[diff_drive_spawner])],
+    ))
 
     # === ROS-Gazebo bridge ===
     # Updated topic names to exactly match Gazebo topics
@@ -127,24 +112,23 @@ def generate_launch_description():
 
     # === Depth image -> LaserScan conversion ===
     depth_to_scan = Node(
-    package='depthimage_to_laserscan',
-    executable='depthimage_to_laserscan_node',
-    name='depthimage_to_laserscan',
-    output='screen',
-    remappings=[
-        ('/depth_camera_info', '/rgbd_camera/camera_info'),
-        ('/depth',  '/rgbd_camera/depth_image'),
-    ],
-    parameters=[{
-        'output_frame': 'base_link',
-        'range_min': 0.1,
-        'range_max': 10.0,
-        'scan_height': 1,
-        'scan_time': 0.033,
-        'use_sim_time': True
-    }]
-)
-
+        package='depthimage_to_laserscan',
+        executable='depthimage_to_laserscan_node',
+        name='depthimage_to_laserscan',
+        output='screen',
+        remappings=[
+            ('/depth_camera_info', '/rgbd_camera/camera_info'),
+            ('/depth',  '/rgbd_camera/depth_image'),
+        ],
+        parameters=[{
+            'output_frame': 'base_link',
+            'range_min': 0.1,
+            'range_max': 10.0,
+            'scan_height': 1,
+            'scan_time': 0.033,
+            'use_sim_time': True
+        }]
+    )
 
     # === SLAM Toolbox ===
     slam_toolbox_node = Node(
@@ -167,18 +151,13 @@ def generate_launch_description():
     # === Launch Description ===
     return LaunchDescription([
         set_gz_resource_path,
-        diff_drive_delay_arg,
         start_gazebo,
         robot_state_publisher,
-        ros2_control_node,
-        joint_state_spawner,
-        delayed_diff_drive_spawner,
         spawn_entity,
-        # Added static TFs
-        # static_tf_base_to_camera,
-        # static_tf_camera_to_optical,
+        delayed_joint_state_spawner,
+        delayed_diff_drive_spawner,
         gz_ros2_bridge,
         depth_to_scan,
         slam_toolbox_node,
-        rviz
+        rviz,
     ])
