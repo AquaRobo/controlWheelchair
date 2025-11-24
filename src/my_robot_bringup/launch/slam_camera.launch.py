@@ -101,12 +101,14 @@ def generate_launch_description():
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/lidar@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/lidar/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
             '/rgbd_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
             '/rgbd_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
             '/rgbd_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
             '/rgbd_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked'
         ],
-        remappings=[('/imu', '/imu/out')],
+        remappings=[('/imu', '/imu/out'), ('/lidar', '/scan')],
         output='screen',
     )
 
@@ -148,6 +150,18 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path]
     )
 
+    # RTAB-Map SLAM
+    rtabmap_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory('my_robot_bringup'), 'launch', 'RTABMapping.launch.py')
+        ]),
+        launch_arguments={
+            'rtabmap_viz': 'true',
+            'localization': 'false'
+        }.items()
+    )
+
     # === Launch Description ===
     return LaunchDescription([
         set_gz_resource_path,
@@ -157,7 +171,8 @@ def generate_launch_description():
         delayed_joint_state_spawner,
         delayed_diff_drive_spawner,
         gz_ros2_bridge,
-        depth_to_scan,
-        slam_toolbox_node,
+        # depth_to_scan,
+        # slam_toolbox_node,
         rviz,
+        # rtabmap_node,
     ])
