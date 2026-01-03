@@ -1,32 +1,33 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50
+    update_rate: 100
+    use_sim_time: true
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    simple_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
     diff_drive_controller:
       type: diff_drive_controller/DiffDriveController
 
+simple_velocity_controller:
+  ros__parameters:
+    joints:
+      - lb_1_joint
+      - rb_1_joint
+
 diff_drive_controller:
   ros__parameters:
-    left_wheel_names: ["lf_1_joint", "lb_1_joint", "lf_2_joint"]
-    right_wheel_names: ["rf_1_joint", "rb_1_joint", "rf_2_joint"]
-
-    wheel_separation: 0.764
-    wheel_radius: 0.14
-
+    left_wheel_names: ["lb_1_joint"]
+    right_wheel_names: ["rb_1_joint"]
+    wheel_separation: 0.68
+    wheel_radius: 0.18
     odom_frame_id: "odom"
-    base_frame_id: "base_link"
-
+    base_frame_id: "base_footprint"
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
-
     enable_odom_tf: true
+    use_stamped_vel: true
     publish_rate: 50.0
-
-    linear.x.max_velocity: 1.0
-    linear.x.min_velocity: -1.0
-    angular.z.max_velocity: 1.0
-    angular.z.min_velocity: -1.0
-

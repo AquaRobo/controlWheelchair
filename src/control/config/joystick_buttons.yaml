@@ -1,0 +1,22 @@
+#LEFTSIDE
+button_l1: KITCHEN_SAVE
+button_l2: LIVING_ROOM_SAVE
+button_right: NONE
+button_top: NONE
+button_left: NONE
+button_bot: NONE
+button_share: KIDS_ROOM_SAVE
+
+#RIGHTSIDE
+button_r1: BEDROOM_SAVE
+button_r2: BATHROOM_SAVE
+button_o:  NONE
+button_tri: NONE
+button_rect: MAP_SAVE
+button_x: GENERAL_ROOM_SAVE
+button_options: HALLWAY_SAVE
+
+#MISC
+button_ps: RESET
+button_l3: HEAVE_DOWN
+button_r3: HEAVE_UP
