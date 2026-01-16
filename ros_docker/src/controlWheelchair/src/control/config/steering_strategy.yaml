@@ -1,0 +1,2 @@
+# Options: DifferentialDriveSteering , AckermannSteering
+steering_strategy: DifferentialDrive

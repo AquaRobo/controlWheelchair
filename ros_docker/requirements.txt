@@ -1,0 +1,8 @@
+numpy
+scipy
+sounddevice
+pyyaml
+torch
+torchaudio
+faster-whisper
+librosa

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="Wheelchair_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Wheels -->
+    <gazebo reference="lb_1">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="rb_1">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="lf_1">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="rf_1">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="lf_2">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>0 0 1</fdir1>
+    </gazebo>
+
+    <gazebo reference="rf_2">
+        <mu1>1000000000000000.0</mu1>
+        <mu2>1000000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <fdir1>0 0 1</fdir1>
+    </gazebo>
+
+    <!-- ROS 2 Control -->
+    <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find my_robot_bringup)/config/my_wheelchair_controller.yaml</parameters>
+        </plugin>
+        <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+        </plugin>
+    </gazebo>
+
+    <!-- IMU -->
+    <gazebo reference="imu_link">
+        <sensor name="imu" type="imu">
+            <always_on>true</always_on>
+            <update_rate>100</update_rate>
+            <gz_frame_id>imu_link</gz_frame_id>
+            <topic>imu</topic>
+            <imu>
+                <angular_velocity>
+                    <x>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>2e-4</stddev>
+                        </noise>
+                    </x>
+                    <y>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>2e-4</stddev>
+                        </noise>
+                    </y>
+                    <z>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>2e-4</stddev>
+                        </noise>
+                    </z>
+                </angular_velocity>
+                <linear_acceleration>
+                    <x>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>1.7e-2</stddev>
+                        </noise>
+                    </x>
+                    <y>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>1.7e-2</stddev>
+                        </noise>
+                    </y>
+                    <z>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>1.7e-2</stddev>
+                        </noise>
+                    </z>
+                </linear_acceleration>
+            </imu>
+        </sensor>
+    </gazebo>
+
+    <!--Lidar-->
+    <gazebo reference='lidar_r'>
+        <sensor name='laser' type='gpu_lidar'>
+            <visualize>true</visualize>
+            <pose relative_to='lidar_r'>0 0 0 0 0 0</pose>
+            <update_rate>10</update_rate>
+            <gz_frame_id>lidar_r</gz_frame_id>
+            <topic>scan</topic>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-1.396263</min_angle>
+                        <max_angle>1.396263</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>1</samples>
+                        <resolution>0.01</resolution>
+                        <min_angle>0</min_angle>
+                        <max_angle>0</max_angle>
+                    </vertical>
+                </scan>
+                <range>
+                    <min>0.08</min>
+                    <max>10.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </ray>
+            <always_on>1</always_on>
+            <visualize>true</visualize>
+        </sensor>
+    </gazebo>
+
+</robot>

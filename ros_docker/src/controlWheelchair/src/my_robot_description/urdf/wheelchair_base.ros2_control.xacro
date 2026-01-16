@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <ros2_control name="MobileBaseHardwareInterface" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+            <!-- <plugin>mock_components/GenericSystem</plugin> -->
+            <param name="calculate_dynamics">true</param>
+        </hardware>
+        <joint name="lf_1_joint">
+            <state_interface name="position" />
+        </joint>
+        <joint name="rf_1_joint">
+            <state_interface name="position" />
+        </joint>
+        <joint name="lf_2_joint">
+            <state_interface name="position" />
+        </joint>
+        <joint name="rf_2_joint">
+            <state_interface name="position" />
+        </joint>
+        <joint name="rb_1_joint">
+            <command_interface name="velocity" />
+            <state_interface name="position" />
+            <state_interface name="velocity" />
+        </joint>
+        <joint name="lb_1_joint">
+            <command_interface name="velocity" />
+            <state_interface name="position" />
+            <state_interface name="velocity" />
+        </joint>
+    </ros2_control>   
+</robot>
