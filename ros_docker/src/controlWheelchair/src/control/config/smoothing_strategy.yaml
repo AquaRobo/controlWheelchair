@@ -1,4 +1,0 @@
-# Options: LinearSmoothing, ExponentialSmoothing
-smoothing_strategy: ExponentialSmoothing  
-linear_factor: 0.2
-exponential_factor: 0.5

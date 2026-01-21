@@ -1,6 +1,0 @@
-I2C:
-  address: 0x40
-  bus: 1
-SPI:
-  max_speed: 1000000
-  mode: 0

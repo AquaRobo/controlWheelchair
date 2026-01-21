@@ -11,7 +11,7 @@ class Configurator:
     WHEELCHAIR_CONFIG = "wheelchair_config"
     BUTTONS = "joystick_buttons"
     ROOM_POSES = "room_poses"
-    SPEACH_RECOGNIZER = "speach_recognizer"
+    SPEECH_RECOGNIZER = "speech_recognizer"
 
     def __init__(self, pkg_name: str = "control"):
         self.__config_file = ''
@@ -41,8 +41,8 @@ class Configurator:
             self.__config_file = root + f"/{Configurator.BUTTONS}.yaml"
         elif data_type == Configurator.ROOM_POSES:
             self.__config_file = root + f"/{Configurator.ROOM_POSES}.yaml"
-        elif data_type == Configurator.SPEACH_RECOGNIZER:
-            self.__config_file = root + f"/{Configurator.SPEACH_RECOGNIZER}.yaml"
+        elif data_type == Configurator.SPEECH_RECOGNIZER:
+            self.__config_file = root + f"/{Configurator.SPEECH_RECOGNIZER}.yaml"
         else:
             self.__raiseTypeError(data_type)
 

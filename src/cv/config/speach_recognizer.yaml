@@ -1,8 +1,0 @@
-WHISPER_MODEL_SIZE: tiny
-SAMPLE_RATE: 16000
-WAKE_DURATION: 2.0
-STEP: 0.5
-THRESHOLD: 0.4
-DEVICE: cpu  # or "cpu"
-TARGET_WORDS: ['water', 'bottle', 'cup', 'kitchen', 'bed room', 'bed',
-                'living room', 'bath room', 'office', 'book']
