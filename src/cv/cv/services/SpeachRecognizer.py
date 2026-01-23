@@ -13,7 +13,7 @@ class SpeachRecognizer:
         self.wake_duration = config['WAKE_DURATION']
         self.step = config['STEP']
         self.threshold = config['THRESHOLD']
-        self.device = torch.device(config['DEVICE'])  # ✅ enforce torch.device
+        self.device = torch.device(config['DEVICE']) 
         self.target_words = config['TARGET_WORDS']
 
         self.wake_model = self.__loadWakeModel()
@@ -80,7 +80,6 @@ class SpeachRecognizer:
         mel_db = librosa.power_to_db(mel, ref=np.max)
         mel_db = (mel_db - mel_db.mean()) / (mel_db.std() + 1e-6)
 
-        # ✅ MOVE TO DEVICE HERE
         return (
             torch.from_numpy(mel_db)
             .float()
