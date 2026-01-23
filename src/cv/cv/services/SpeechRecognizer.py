@@ -1,189 +1,161 @@
 import time
 import numpy as np
 import sounddevice as sd
-from faster_whisper import WhisperModel
+import whisper
 import librosa
 import torch
+
 from cv.helper.AudioBuffer import AudioBuffer
 
 
 class SpeechRecognizer:
     def __init__(self, config: dict, model_path: str):
-        # ---------------- Configuration ----------------
-        self.sample_rate = config["SAMPLE_RATE"]
-        self.wake_duration = config["WAKE_DURATION"]
-        self.device = config["DEVICE"]
-        self.target_words = config["TARGET_WORDS"]
-        self.threshold = config["THRESHOLD"]
-        self.whisper_model_size = config["WHISPER_MODEL_SIZE"]
+        self.config = config
+        self.model_path = model_path
 
-        # ---------------- Audio ----------------
-        self.command_duration = 3.0
+        self.device = config.get(
+            "device",
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
+
+        self.sample_rate = config.get("sample_rate", 16000)
+        self.duration = config.get("listen_duration", 3)
+
+
         self.audio_buffer = AudioBuffer(
             self.sample_rate,
-            self.command_duration
+            self.duration
         )
 
-        # ---------------- Models ----------------
-        self.wake_model = self.__loadWakeModel(model_path)
-
-        self.whisper_model = WhisperModel(
-            self.whisper_model_size,
-            device=self.device,
-            compute_type="int8" if self.device == "cpu" else "float16"
+        self.stream = sd.InputStream(
+            samplerate=self.sample_rate,
+            channels=1,
+            dtype="float32",
+            callback=self._audio_callback,
         )
+        self.stream.start()
+        self.wake_word_threshold = config.get("wake_word_threshold", 0.5)
+        self.wake_word_model = None
 
-        # ---------------- Runtime State ----------------
-        self.recognized_room = None
-        self.recognized_object = None
-        self.__transcription = ""
-        self.__wake_prob = 0.0
+        self.whisper_model = None
+        self.whisper_model_size = config.get("whisper_model", "tiny.en")
 
+        
 
-    # ==================================================
-    # Wake Word Model Loader
-    # ==================================================
-
-    def __loadWakeModel(self, model_path: str):
-        """
-        Load your TorchScript wake-word model.
-        """
-        import torch
-        model = torch.jit.load(model_path, map_location=self.device)
-        model.eval()
-        return model
+        # self._loadWakeWordModel()
+        self._loadWhisperModel()
 
 
-    # ==================================================
-    # Audio Callback
-    # ==================================================
 
-    def __audioCallback(self, indata, frames, time_info, status):
+    def _audio_callback(self, indata, frames, time, status):
         if status:
-            print(status)
+            return
         self.audio_buffer.add(indata[:, 0])
 
 
-    # ==================================================
-    # Wake Word Detection
-    # ==================================================
 
-    def __waitForWakeWord(self) -> bool:
-        """
-        Blocking wake-word detection window.
-        """
+    # def _listen(self) -> np.ndarray:
+    #     audio = sd.rec(
+    #         int(self.sample_rate * self.duration),
+    #         samplerate=self.sample_rate,
+    #         channels=1,
+    #         dtype="float32",
+    #     )
+    #     sd.wait()
+    #     return audio.flatten()
 
-        data = sd.rec(
-            int(self.wake_duration * self.sample_rate),
-            samplerate=self.sample_rate,
-            channels=1,
-            dtype="float32"
+    def _loadWakeWordModel(self):
+        # model = torch.load(self.model_path, map_location=self.device, weights_only=False)
+
+        # if not isinstance(model, torch.jit.ScriptModule):
+        #     model = model.to(self.device)
+
+        # model.eval()
+        # self.wake_word_model = 
+        pass
+
+    def _runWakeWordDetection(self) -> float:
+        # if self.wake_word_model is None:
+        #     return 0.0
+
+        # audio = self._listen()
+
+        # if np.max(np.abs(audio)) > 0:
+        #     audio = audio / np.max(np.abs(audio))
+
+        # mel = librosa.feature.melspectrogram(
+        #     y=audio,
+        #     sr=self.sample_rate,
+        #     n_fft=1024,
+        #     hop_length=512,
+        #     n_mels=64,
+        # )
+        # mel_db = librosa.power_to_db(mel, ref=np.max)
+        # mel_db = (mel_db - mel_db.mean()) / (mel_db.std() + 1e-6)
+
+        # x = (
+        #     torch.tensor(mel_db, dtype=torch.float32)
+        #     .unsqueeze(0)
+        #     .unsqueeze(0)
+        #     .to(self.device)
+        # )
+
+        # with torch.inference_mode():
+        #     logit = self.wake_word_model(x).item()
+        #     prob = torch.sigmoid(torch.tensor(logit, device=self.device)).item()
+
+        # return prob
+        pass
+
+
+    def _getWakeWord(self) -> bool:
+        return  True #self._runWakeWordDetection() >= self.wake_word_threshold
+
+    def _loadWhisperModel(self):
+        self.whisper_model = whisper.load_model(
+            self.whisper_model_size,
+            device=self.device,
         )
-        sd.wait()
 
-        y = data.flatten()
-        if np.max(np.abs(y)) > 0:
-            y = y / np.max(np.abs(y))
+    def _runWhisper(self, audio: np.ndarray) -> str:
+        if self.whisper_model is None:
+            return ""
 
-        mel = librosa.feature.melspectrogram(
-            y=y,
-            sr=self.sample_rate,
-            n_fft=1024,
-            hop_length=512,
-            n_mels=64
-        )
-        mel_db = librosa.power_to_db(mel, ref=np.max)
-        mel_db = (mel_db - mel_db.mean()) / (mel_db.std() + 1e-6)
-
-        x = torch.tensor(mel_db, dtype=torch.float32)\
-                .unsqueeze(0).unsqueeze(0)
-
-        with torch.inference_mode():
-            logit = self.wake_model(x).item()
-            self.__wake_prob = torch.sigmoid(
-                torch.tensor(logit)
-            ).item()
-
-        return self.__wake_prob >= self.threshold
-
-
-    # ==================================================
-    # Streaming Command Recording
-    # ==================================================
-
-    def __recordCommand(self) -> np.ndarray:
-        self.audio_buffer.clear()
-
-        with sd.InputStream(
-            samplerate=self.sample_rate,
-            channels=1,
-            callback=self.__audioCallback,
-            blocksize=int(self.sample_rate * 0.2),
-        ):
-            while not self.audio_buffer.ready():
-                time.sleep(0.01)
-
-        return self.audio_buffer.get()
-
-
-    # ==================================================
-    # Whisper Transcription + Keyword Extraction
-    # ==================================================
-
-    def __transcribeAndCheck(self, audio: np.ndarray) -> bool:
-        segments, _ = self.whisper_model.transcribe(
+        result = self.whisper_model.transcribe(
             audio,
             language="en",
-            beam_size=1,
-            vad_filter=True
+            fp16=(self.device == "cuda"),
         )
 
-        self.__transcription = " ".join(
-            seg.text for seg in segments
-        ).lower().strip()
+        return result["text"].strip()
 
-        for word in self.target_words:
-            if word in self.__transcription:
-                if word in [
-                    "kitchen", "bed room", "living room",
-                    "bath room", "office"
-                ]:
-                    self.recognized_room = word.replace(" ", "_")
-                else:
-                    self.recognized_object = word
-                return True
+    def _getCommandedRoom(self, transcription: str) -> str:
+        for room in self.config.get("rooms", []):
+            if room.lower() in transcription.lower():
+                return room
+        return ""
 
-        return False
+    def _getCommandedObject(self, transcription: str) -> str:
+        for obj in self.config.get("objects", []):
+            if obj.lower() in transcription.lower():
+                return obj
+        return ""
 
+    def recognizeSpeech(self):
 
-    # ==================================================
-    # Public API (ROS Node Calls This)
-    # ==================================================
+        if not self.audio_buffer.ready():
+            return None, None
 
-    def recognizeSpeech(self) -> bool:
-        self.recognized_room = None
-        self.recognized_object = None
-        self.__transcription = ""
+        audio = self.audio_buffer.get()
+        self.audio_buffer.clear()
 
-        if not self.__waitForWakeWord():
-            return False
+        transcription = self._runWhisper(audio)
 
-        audio = self.__recordCommand()
-        return self.__transcribeAndCheck(audio)
+        room = self._getCommandedRoom(transcription)
+        obj = self._getCommandedObject(transcription)
 
+        return room, obj
 
-    # ==================================================
-    # Getters
-    # ==================================================
-
-    def getRecognizedRoom(self):
-        return self.recognized_room
-
-    def getRecognizedObject(self):
-        return self.recognized_object
-
-    def getTranscription(self):
-        return self.__transcription
-
-    def getWakeWordProbability(self):
-        return self.__wake_prob
+    # def end_stream(self):
+    #     self.stream.stop()
+    #     self.stream.close()

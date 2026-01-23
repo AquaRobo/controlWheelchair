@@ -1,9 +1,28 @@
-WHISPER_MODEL_SIZE: tiny
-SAMPLE_RATE: 16000
-WAKE_DURATION: 2.0
-STEP: 0.5
-THRESHOLD: 0.4
-DEVICE: cpu  # or "cpu"
-TARGET_WORDS: ['water', 'bottle', 'cup', 'kitchen', 'bed room', 'bed',
-                'living room', 'bath room', 'office', 'book']
-  
+# Audio
+sample_rate: 16000
+listen_duration: 3
+buffer_size: 16000
+
+# Wake word
+wake_word_threshold: 0.4
+
+# Whisper
+whisper_model: tiny.en
+
+# Command extraction
+rooms:
+  - kitchen
+  - bedroom
+  - bathroom
+  - living room
+  - dining room
+  - office
+
+objects:
+  - phone
+  - laptop
+  - tv
+  - bottle
+  - cup
+  - book
+  - remote
