@@ -1,6 +1,17 @@
-I2C:
+# Determine the communication protocol and its parameters
+actuators_protocol: I2C # Options: I2C, SPI, CAN
+sensors_protocol: I2C # Options: I2C, SPI, CAN
+i2c_actuators_config:
   address: 0x40
   bus: 1
-SPI:
+spi_actuators_config:
   max_speed: 1000000
   mode: 0
+i2c_sensors_config:
+  address: 0x38
+  bus: 1
+spi_sensors_config:
+  max_speed: 1000000
+  mode: 0
+# copy the previous protocols and repeat for any other communication protocols needed
+

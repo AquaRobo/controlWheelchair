@@ -6,10 +6,10 @@ class SPIHandler:
     def __init__(self, spi_config: dict):
         pass
 
-    def sendData(self, data: list) -> None:
+    def sendData(self, data: str) -> None:
         # Implementation for sending data via SPI
         pass
 
-    def receiveData(self) -> list:
+    def receiveData(self) -> str:
         # Implementation for receiving data via SPI
         pass

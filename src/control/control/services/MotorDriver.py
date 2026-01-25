@@ -2,7 +2,6 @@ from zope.interface import implementer
 from control.DTOs.motors import Motors
 from control.interfaces.IMotorDriver import IMotorDriver
 from utils.Dispatcher import Dispatcher
-import json
 
 @implementer(IMotorDriver)
 class MotorDriver:
@@ -10,20 +9,18 @@ class MotorDriver:
         self.commHandler = Dispatcher().get_communication_handler("ACTUATOR")
 
     def drive(self, motors_dict: dict[str, Motors]) -> None:
-        motors_json = self.__buildMotorsArray(motors_dict)
-        self.commHandler.sendData(motors_json)
+        for motor_name, motor in motors_dict.items():
+            motors_msg = self.__buildMotorsMessage(motor)
+        self.commHandler.sendData(motors_msg)
 
-    def __buildMotorsArray(self, motors_dict: dict[str, Motors]) -> json:
-        """Converts motor dict to json array to identify each motor by its index
-        and send its pwm and dir values.
+    def __buildMotorsMessage(self, motor: Motors) -> str:
+        """Converts motor dict to string and send its pwm and dir values.
         Args:
-            motors_dict (dict[str, Motors]): Dictionary of motor instances.
+            motor: Motor instance holding all its data.
         Returns:
-            json: JSON array of motors with their pwm and dir values.
+            str:  Motor's data formated as a string.
         Example:
-            data = {"RIGHT_MOTORS": {pwm: 0, dir: 1}, "LEFT_MOTORS": {pwm: 0, dir: 1}}
+            message = "{motor.pwm_pin}-{motor.dir_pin}-{motor.current_pwm}-{motor.dir_bit}"
         """
-        control_motors_dict = {}
-        for motor_side, motor in motors_dict.items():
-            control_motors_dict[motor_side] = {"pwm": motor.current_pwm, "dir": motor.dir_bit}
-        return json.dumps(control_motors_dict)
+        message = f"{motor.pwm_pin}-{motor.dir_pin}-{motor.current_pwm}-{motor.dir_bit}"
+        return message
