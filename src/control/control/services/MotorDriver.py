@@ -11,7 +11,7 @@ class MotorDriver:
     def drive(self, motors_dict: dict[str, Motors]) -> None:
         for motor_name, motor in motors_dict.items():
             motors_msg = self.__buildMotorsMessage(motor)
-        self.commHandler.sendData(motors_msg)
+            self.commHandler.sendData(motors_msg)
 
     def __buildMotorsMessage(self, motor: Motors) -> str:
         """Converts motor dict to string and send its pwm and dir values.
