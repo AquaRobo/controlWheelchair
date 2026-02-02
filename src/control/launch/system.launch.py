@@ -9,6 +9,7 @@ def generate_launch_description():
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
     localization_params = os.path.join(get_package_share_directory('control'),'config','localization_params.yaml')
     nav2_params = os.path.join(get_package_share_directory('control'),'config','nav2_params.yaml')
+    ekf_params = os.path.join(get_package_share_directory('control'),'config','ekf_params.yaml')
     map_path = "./turtlebot_map.yaml"
 
     joystick_launch = IncludeLaunchDescription(
