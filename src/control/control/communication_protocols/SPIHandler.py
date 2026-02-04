@@ -8,6 +8,7 @@ from control.exceptions.CommWriteException import CommWriteError
 
 @implementer(ICommhandler)
 class SPIHandler:
+    """Wrapper around spidev python library."""
     def __init__(self, spi_config: dict):
         self.spi_details = spi_config
         self.device_address = self.spi_details['address']
@@ -27,10 +28,9 @@ class SPIHandler:
         except Exception as e:
             raise CommInitError(f"Error initializing SPI device: {e}")
 
-    def sendData(self, data: str) -> None:
+    def sendData(self, data: list) -> None:
         try:
-            msg = data.encode('utf-8')
-            self.spi.writebytes(msg)
+            self.spi.writebytes(data)
         except Exception as e:
             raise CommWriteError(f"Error writing to SPI device: {e}")
 
@@ -40,6 +40,13 @@ class SPIHandler:
             return result
         except Exception as e:
             raise CommReadError(f"Error reading from SPI device: {e}")
+        
+    def transfer(self, data: list):
+        try:
+            result = self.spi.xfer2(data.copy())
+            return result
+        except Exception as e:
+            raise CommReadError(f"Error transferring data via SPI: {e}")
 
     def close(self) -> None:
         try:

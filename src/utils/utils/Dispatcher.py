@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from utils.Configurator import Configurator
+from utils.EnvParams import EnvParams
 
 class Dispatcher:
 
@@ -40,30 +41,34 @@ class Dispatcher:
         comm_dict = Configurator("control").fetchData(Configurator.COMM_HANDLER)
         actuators_protocol = Configurator("control").fetchData(Configurator.COMM_HANDLER)['actuators_protocol']
         sensors_protocol = Configurator("control").fetchData(Configurator.COMM_HANDLER)['sensors_protocol']
-        if module_type == "ACTUATOR":
-            if actuators_protocol == "I2C":
-                comm_handler_config = comm_dict["i2c_actuators_config"]
-                from control.communication_protocols.I2CHandler import I2CHandler
-                return I2CHandler(comm_handler_config)
-            elif actuators_protocol == "SPI":
-                comm_handler_config = comm_dict["spi_actuators_config"]
-                from control.communication_protocols.SPIHandler import SPIHandler
-                return SPIHandler(comm_handler_config)
-            else:
-                raise ValueError(f"Unknown actuators protocol: {actuators_protocol}")
-        elif module_type == "SENSOR":
-            if sensors_protocol == "I2C":
-                comm_handler_config = comm_dict["i2c_sensors_config"]
-                from control.communication_protocols.I2CHandler import I2CHandler
-                return I2CHandler(comm_handler_config)
-            elif sensors_protocol == "SPI":
-                comm_handler_config = comm_dict["spi_sensors_config"]
-                from control.communication_protocols.SPIHandler import SPIHandler
-                return SPIHandler(comm_handler_config)
-            else:
-                raise ValueError(f"Unknown sensors protocol: {sensors_protocol}")
+        if EnvParams().ENV == "SIMULATION":
+            from control.simulation_services.CommMock import CommMock
+            return CommMock(comm_dict)
         else:
-            raise ValueError(f"Unknown module type: {module_type}")
+            if module_type == "ACTUATOR":
+                if actuators_protocol == "I2C":
+                    comm_handler_config = comm_dict["i2c_actuators_config"]
+                    from control.communication_protocols.I2CHandler import I2CHandler
+                    return I2CHandler(comm_handler_config)
+                elif actuators_protocol == "SPI":
+                    comm_handler_config = comm_dict["spi_actuators_config"]
+                    from control.communication_protocols.SPIHandler import SPIHandler
+                    return SPIHandler(comm_handler_config)
+                else:
+                    raise ValueError(f"Unknown actuators protocol: {actuators_protocol}")
+            elif module_type == "SENSOR":
+                if sensors_protocol == "I2C":
+                    comm_handler_config = comm_dict["i2c_sensors_config"]
+                    from control.communication_protocols.I2CHandler import I2CHandler
+                    return I2CHandler(comm_handler_config)
+                elif sensors_protocol == "SPI":
+                    comm_handler_config = comm_dict["spi_sensors_config"]
+                    from control.communication_protocols.SPIHandler import SPIHandler
+                    return SPIHandler(comm_handler_config)
+                else:
+                    raise ValueError(f"Unknown sensors protocol: {sensors_protocol}")
+            else:
+                raise ValueError(f"Unknown module type: {module_type}")
         
     
         

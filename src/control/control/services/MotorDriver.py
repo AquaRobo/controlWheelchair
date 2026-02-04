@@ -9,18 +9,19 @@ class MotorDriver:
         self.commHandler = Dispatcher().get_communication_handler("ACTUATOR")
 
     def drive(self, motors_dict: dict[str, Motors]) -> None:
-        for motor_name, motor in motors_dict.items():
-            motors_msg = self.__buildMotorsMessage(motor)
-            self.commHandler.sendData(motors_msg)
+        motors_speeds = self.__buildMotorsArray(motors_dict)
+        self.commHandler.sendData(motors_speeds)
 
-    def __buildMotorsMessage(self, motor: Motors) -> str:
-        """Converts motor dict to string and send its pwm and dir values.
+    def __buildMotorsArray(self, motors_drict: dict[str, Motors]) -> list:
+        """Converts motor dict to list and send its speed.
         Args:
-            motor: Motor instance holding all its data.
+            motors_dict: Dictionary holding motors objects
         Returns:
-            str:  Motor's data formated as a string.
+            str:  Motor's data formated in a list.
         Example:
-            message = "{motor.pwm_pin}-{motor.dir_pin}-{motor.current_pwm}-{motor.dir_bit}"
+            data = ["w", motor.current_speed, .....for number of motors]
         """
-        message = f"{motor.pwm_pin}-{motor.dir_pin}-{motor.current_pwm}-{motor.dir_bit}"
-        return message
+        data = ["w"]
+        for motor in motors_drict.values():
+            data.extend([float(motor.current_speed)]) 
+        return data
