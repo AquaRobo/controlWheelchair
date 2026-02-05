@@ -43,7 +43,7 @@ class SPIHandler:
         
     def transfer(self, data: list):
         try:
-            result = self.spi.xfer2(data.copy())
+            result = self.spi.xfer2(data)
             return result
         except Exception as e:
             raise CommReadError(f"Error transferring data via SPI: {e}")
