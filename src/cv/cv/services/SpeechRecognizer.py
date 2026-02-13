@@ -141,11 +141,17 @@ class SpeechRecognizer:
                 return obj
         return ""
 
+    def _getCommandedAction(self, transcription: str) -> str:
+        for action in self.config.get("actions", []):
+            if action.lower() in transcription.lower():
+                return action
+        return ""
+        
+    
     def recognizeSpeech(self):
 
         if not self.audio_buffer.ready():
-            return None, None
-
+            return None, None, None
         audio = self.audio_buffer.get()
         self.audio_buffer.clear()
 
@@ -153,8 +159,9 @@ class SpeechRecognizer:
 
         room = self._getCommandedRoom(transcription)
         obj = self._getCommandedObject(transcription)
+        action = self._getCommandedAction(transcription)
 
-        return room, obj
+        return room, obj, action
 
     # def end_stream(self):
     #     self.stream.stop()

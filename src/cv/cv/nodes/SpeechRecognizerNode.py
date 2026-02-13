@@ -36,13 +36,19 @@ class SpeechRecognizerNode(Node):
             10
         )
 
+        self.actions_pub = self.create_publisher(
+            String,
+            "/commanded_action",
+            10
+        )
+
         self.timer = self.create_timer(0.1, self._run)
 
         self.get_logger().info("SpeechRecognizerNode started")
 
 
     def _run(self):
-        room, obj = self.speech_recognizer.recognizeSpeech()
+        room, obj, action = self.speech_recognizer.recognizeSpeech()
 
         if room:
             msg = String()
@@ -55,6 +61,12 @@ class SpeechRecognizerNode(Node):
             msg.data = obj.upper()
             self.object_pub.publish(msg)
             self.get_logger().info(f"Published Commanded Object: {msg.data}")
+
+        if action:
+            msg = String()
+            msg.data = action.upper()
+            self.actions_pub.publish(msg)
+            self.get_logger().info(f"Published Commanded Action: {msg.data}")
 
 
 def main(args=None):

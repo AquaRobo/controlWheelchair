@@ -7,7 +7,7 @@ buffer_size: 16000
 wake_word_threshold: 0.4
 
 # Whisper
-whisper_model: tiny.en
+whisper_model: base.en
 
 # Command extraction
 rooms:
@@ -26,3 +26,15 @@ objects:
   - cup
   - book
   - remote
+  - water
+
+actions:
+  - grab
+  - up
+  - down
+  - left
+  - right
+  - backawrd
+  - forward
+  - "first position"
+  - "second position"
