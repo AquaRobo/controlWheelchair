@@ -1,0 +1,18 @@
+digraph G {
+"base_link" -> "lb_1"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"base_footprint" -> "base_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"lf_2" -> "lf_1"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"base_link" -> "lf_2"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"base_link" -> "rb_1"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"rf_2" -> "rf_1"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"base_link" -> "rf_2"[label=" Broadcaster: default_authority\nAverage rate: 21.429\nBuffer length: 0.7\nMost recent transform: 4.35\nOldest transform: 3.65\n"];
+"odom" -> "base_footprint"[label=" Broadcaster: default_authority\nAverage rate: 200.0\nBuffer length: 0.73\nMost recent transform: 4.37\nOldest transform: 3.64\n"];
+"base_link" -> "imu_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "lidar_l"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "lidar_r"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "lidar_t"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1770882241.5516458"[ shape=plaintext ] ;
+}->"odom";
+}

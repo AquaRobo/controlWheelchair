@@ -33,7 +33,7 @@ ekf_filter_node:
         # Debug settings. Not for the faint of heart. Outputs a ludicrous amount of information to the file specified by
         # debug_out_file. I hope you like matrices! Please note that setting this to true will have strongly deleterious
         # effects on the performance of the node. Defaults to false if unspecified.
-        debug: true
+        debug: false
 
         # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
         debug_out_file: /home/mansour/Desktop/Wheelchair/controlWheelchair/ekf_debug.txt
@@ -67,9 +67,9 @@ ekf_filter_node:
         #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
         #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
         map_frame: map              # Defaults to "map" if unspecified
-        odom_frame: odom            # Defaults to "odom" if unspecified
+        odom_frame: odom_filtered            # Defaults to "odom" if unspecified
         base_link_frame: base_footprint  # Defaults to "base_link" if unspecified
-        world_frame: odom           # Defaults to the value of odom_frame if unspecified
+        world_frame: odom_filtered           # Defaults to the value of odom_frame if unspecified
 
         # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
         # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
