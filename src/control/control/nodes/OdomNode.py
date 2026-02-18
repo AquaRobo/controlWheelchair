@@ -89,7 +89,7 @@ class OdomNode(Node):
         self.transform_stamped.transform.rotation.z = q[2]
         self.transform_stamped.transform.rotation.w = q[3]
         self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
-        self.br.sendTransform(self.transform_stamped)
+        # self.br.sendTransform(self.transform_stamped)
         
 
 def main(args=None):

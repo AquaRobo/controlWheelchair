@@ -11,7 +11,7 @@ slam_toolbox:
     ceres_loss_function: None
 
     # ROS Parameters
-    odom_frame: odom
+    odom_frame: odom_filtered
     map_frame: map
     base_frame: base_footprint
     scan_topic: /scan
@@ -31,7 +31,7 @@ slam_toolbox:
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    map_file_name: /home/mansour/Desktop/EWheelchair/maps/turtlebot
+    map_file_name: /home/mansour/Desktop/Wheelchair/controlWheelchair/maps/turtlebot
     map_start_pose: [0.0, 0.0, 0.0]
     #map_start_at_dock: true
 
