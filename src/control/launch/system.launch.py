@@ -82,7 +82,7 @@ def generate_launch_description():
         joystick_launch,
         wheelchair_bringup,
         navigation_node,
-        # odom_node,
+        odom_node,
         twist_mux_node,
         # localization_launch,
         # lifelong_slam_launch,

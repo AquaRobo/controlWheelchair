@@ -54,6 +54,10 @@ class Dispatcher:
                     comm_handler_config = comm_dict["spi_actuators_config"]
                     from control.communication_protocols.SPIHandler import SPIHandler
                     return SPIHandler(comm_handler_config)
+                elif actuators_protocol == "UART":
+                    comm_handler_config = comm_dict["uart_actuators_config"]
+                    from control.communication_protocols.UARTHandler import UARTHandler
+                    return UARTHandler(comm_handler_config)
                 else:
                     raise ValueError(f"Unknown actuators protocol: {actuators_protocol}")
             elif module_type == "SENSOR":
@@ -65,6 +69,10 @@ class Dispatcher:
                     comm_handler_config = comm_dict["spi_sensors_config"]
                     from control.communication_protocols.SPIHandler import SPIHandler
                     return SPIHandler(comm_handler_config)
+                elif sensors_protocol == "UART":
+                    comm_handler_config = comm_dict["uart_sensors_config"]
+                    from control.communication_protocols.UARTHandler import UARTHandler
+                    return UARTHandler(comm_handler_config)
                 else:
                     raise ValueError(f"Unknown sensors protocol: {sensors_protocol}")
             else:

@@ -1,6 +1,6 @@
 # Determine the communication protocol and its parameters
-actuators_protocol: SPI # Options: I2C, SPI, CAN
-sensors_protocol: SPI # Options: I2C, SPI, CAN
+actuators_protocol: UART # Options: I2C, SPI, CAN, UART
+sensors_protocol: SPI # Options: I2C, SPI, CAN, UART
 i2c_actuators_config:
   address: 0x40
   bus: 1
@@ -11,6 +11,10 @@ spi_actuators_config:
   data_size: 40
   bus: 0
   device: 0
+uart_actuators_config:
+  port: /dev/ttyUSB0
+  baudrate: 115200
+  timeout: 0.5
 i2c_sensors_config:
   address: 0x38
   bus: 1
@@ -21,5 +25,9 @@ spi_sensors_config:
   data_size: 40
   bus: 0
   device: 1
+uart_sensors_config:
+  port: /dev/ttyUSB1
+  baudrate: 115200
+  timeout: 0.5
 # copy the previous protocols and repeat for any other communication protocols needed
 

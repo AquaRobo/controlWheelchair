@@ -23,5 +23,5 @@ class MotorDriver:
         """
         data = ["w"]
         for motor in motors_drict.values():
-            data.extend([float(motor.current_speed)]) 
+            data.extend([float(motor.current_pwm)]) 
         return data

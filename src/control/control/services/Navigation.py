@@ -18,18 +18,18 @@ class Navigation:
     def navigate(self, x_axis: float, z_axis: float, yaw_axis: float) -> None:
         self.speed_evaluator.evaluateSpeeds(x_axis, z_axis, yaw_axis, self.motors_dict)
         # self.steering_strat.steer(self.motors_dict)
-        # PWMMapper().mapAxesToPWM(self.motors_dict)
+        PWMMapper().mapAxesToPWM(self.motors_dict)
         for motor_name, motor in self.motors_dict.items():
             # print(f"Motor: {motor_name}, Speed: {motor.speed}, Current PWM: {motor.current_pwm}, Dir Bit: {motor.dir_bit}")
-            target_pwm = motor.target_speed
-            smoothed_pwm = self.smoothing_strat.smooth(motor.current_speed, target_pwm)
-            motor.current_speed = smoothed_pwm
+            target_pwm = motor.target_pwm
+            smoothed_pwm = self.smoothing_strat.smooth(motor.current_pwm, target_pwm)
+            motor.current_pwm = smoothed_pwm
         self.motor_driver.drive(self.motors_dict)
 
     def getMotorsSpeed(self):
         speeds = []
         for motor_name, motor in self.motors_dict.items():
-            speeds.append(motor.current_speed)
+            speeds.append(motor.target_speed)
         return speeds
 
     def __toMotorObjects(self, yaml_data: dict) -> dict:
