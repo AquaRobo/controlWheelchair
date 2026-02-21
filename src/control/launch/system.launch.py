@@ -1,11 +1,18 @@
 import os
 from launch_ros.actions import Node
 from launch import LaunchDescription
+from utils.EnvParams import EnvParams
+from launch.conditions import IfCondition
+from launch.substitutions import PythonExpression
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory, get_package_share_path
 
 def generate_launch_description():
+    if EnvParams().LIDAR == "REALTIME":
+        lidar_sim = 'false'
+    else: 
+        lidar_sim = 'true'
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
     localization_params = os.path.join(get_package_share_directory('control'),'config','localization_params.yaml')
     nav2_params = os.path.join(get_package_share_directory('control'),'config','nav2_params.yaml')
@@ -19,6 +26,14 @@ def generate_launch_description():
     wheelchair_bringup = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory("my_robot_bringup"), "launch"), "/world.launch.py"]),
+                    launch_arguments={'use_lidar_sim': lidar_sim}.items()
+    )
+
+    lidar_launch = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory("control"), "launch"), "/lidar.launch.py"]),
+                launch_arguments={'frame_id': 'lidar_r'}.items(),
+                condition=IfCondition(PythonExpression([f"'{lidar_sim}' == 'false'"]))
     )
 
     localization_launch = IncludeLaunchDescription(
@@ -81,6 +96,7 @@ def generate_launch_description():
     return LaunchDescription([
         joystick_launch,
         wheelchair_bringup,
+        lidar_launch,
         navigation_node,
         odom_node,
         twist_mux_node,

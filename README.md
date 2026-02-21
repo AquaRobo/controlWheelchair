@@ -5,6 +5,18 @@
 >``source /opt/ros/jazzy/setup.bash``
 #### 3- Source the workspace (replace with the actual path to your Wheelchair/controlWheelchair/install/setup.bash) 
 >``source /home/<linux root username>/Wheelchair/controlWheelchair/install/setup.bash``
+
+#### 4- To run the hardware lidar:
+
+> Clone slamtec/rplidar_ros repo: ``git clone -b ros2 https://github.com/Slamtec/rplidar_ros.git``
+
+> `` cd rplidar_ros ``
+
+> `` colcon build --symlink-install ``
+
+> `` source ./install/setup.bash `` 
+
+> `` source scripts/create_udev_rules.sh `` 
 ---
 # How to run the work space
 #### 1- Look for any "CHANGE" comment in the whole worksapce and follow the provided steps

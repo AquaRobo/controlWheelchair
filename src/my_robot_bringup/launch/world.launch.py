@@ -1,15 +1,16 @@
 import os
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.substitutions import Command
 from launch.event_handlers import OnProcessStart
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import Command , LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler, TimerAction, SetEnvironmentVariable
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, TimerAction, SetEnvironmentVariable, DeclareLaunchArgument
 
 def generate_launch_description():
-
+    use_lidar_sim = LaunchConfiguration('use_lidar_sim')
+    lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
     # Package paths
     robot_description_pkg = get_package_share_directory('my_robot_description')
     pkg_worlds = get_package_share_directory('gazebo_worlds')
@@ -19,7 +20,7 @@ def generate_launch_description():
     rviz_config_path = os.path.join(robot_description_pkg, 'rviz', 'wheelchair_config.rviz')
     world_path = os.path.join(pkg_worlds, 'worlds', 'house_turtlebot.world')
     
-    robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
+    robot_description = ParameterValue(Command(['xacro ', urdf_path, ' use_lidar_sim:=', use_lidar_sim]), value_type=str)
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
@@ -95,6 +96,7 @@ def generate_launch_description():
     ))
 
     return LaunchDescription([
+        lidar_sim_arg,
         robot_state_publisher_node,
         delayed_joint_state_spawner,
         delayed_simple_velocity_spawner,
