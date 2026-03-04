@@ -1,3 +1,10 @@
+"""
+Single-machine launch file (development / testing on one PC).
+For split deployment:
+  - Pi    → ros2 launch my_robot_bringup world_core.launch.py
+  - Laptop → ros2 launch my_robot_bringup world_viz.launch.py
+"""
+
 import os
 from launch_ros.actions import Node
 from launch import LaunchDescription

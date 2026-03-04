@@ -1,22 +1,22 @@
 import os
 from launch_ros.actions import Node
 from launch import LaunchDescription
+from utils.EnvParams import EnvParams
 from launch.actions import IncludeLaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
+    if EnvParams().VISUALIZATION == "ON":
+        launch_file = "world.launch.py"
+    else:
+        launch_file = "world_core.launch.py"
     mapping_params = os.path.join(get_package_share_directory('control'),'config','mapping.yaml')
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
-
-    joystick_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory("control"), "launch"), "/joystick.launch.py"]),
-    )
     
     wheelchair_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory("my_robot_bringup"), "launch"), "/world.launch.py"]),
+            get_package_share_directory("my_robot_bringup"), "launch"), f"/{launch_file}"]),
     )
     
     # Mapping Launch
@@ -50,20 +50,18 @@ def generate_launch_description():
         remappings=[('/cmd_vel_out', '/cmd_vel')]
     )
 
-    # Room_Identifier launch
     room_identifier_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory("cv"), "launch"), "/roomIdentifier.launch.py"]),
     )
 
-    # Room_Pose_Saver Node
     room_pose_saver_node = Node(
         package="control",
         executable="room_pose_saver_node",
         output="screen", 
         parameters=[{'use_sim_time': True}]
     )
-    # Map Saver Node
+
     map_saver_node = Node(
         package="control",
         executable="map_saver_node",
@@ -72,7 +70,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        joystick_launch,
         wheelchair_bringup,
         navigation_node,
         odom_node,
