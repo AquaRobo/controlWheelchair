@@ -1,0 +1,57 @@
+<launch>
+  
+  <arg name="use_sim" default="false" description="Set to true when running with Gazebo"/>
+  
+  <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot_urdf.xacro"/>
+  <let name="rviz_config_path" value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz"/>
+
+  
+  <group unless="$(var use_sim)">
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
+      <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
+    </node>
+
+    
+    <node pkg="controller_manager" exec="ros2_control_node">
+      <param from="$(find-pkg-share my_robot_bringup)/config/ros2_controllers.yaml"/>
+    </node>
+  </group>
+
+  
+  <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster"/>
+  <node pkg="controller_manager" exec="spawner" args="arm_controller"/>
+  <node pkg="controller_manager" exec="spawner" args="gripper_controller"/>
+
+  
+  <include file="$(find-pkg-share my_robot_moveit_config)/launch/move_group.launch.py"/>
+
+  
+  <group if="$(var use_sim)">
+    <node pkg="rviz2" exec="rviz2" output="screen" args="-d $(var rviz_config_path)">
+      <param name="use_sim_time" value="true"/>
+    </node>
+  </group>
+  <group unless="$(var use_sim)">
+    <node pkg="rviz2" exec="rviz2" output="screen" args="-d $(var rviz_config_path)"/>
+  </group>
+
+  
+  <group if="$(var use_sim)">
+    <node pkg="my_robot_commander_py" exec="commander" name="commander" output="screen">
+      <param name="use_sim_time" value="true"/>
+    </node>
+  </group>
+  <group unless="$(var use_sim)">
+    <node pkg="my_robot_commander_py" exec="commander" name="commander" output="screen"/>
+  </group>
+
+  <group if="$(var use_sim)">
+    <node pkg="cv" exec="speech_recognizer_node" name="speech_recognizer_node" output="screen">
+      <param name="use_sim_time" value="true"/>
+    </node>
+  </group>
+  <group unless="$(var use_sim)">
+    <node pkg="cv" exec="speech_recognizer_node" name="speech_recognizer_node" output="screen"/>
+  </group>
+
+</launch>
