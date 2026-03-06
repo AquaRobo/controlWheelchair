@@ -1,0 +1,41 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+      use_sim_time: $(arg use_sim)
+
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - Joint_1
+        - Joint_2
+        - Joint_3
+        - Joint_4
+        - Joint_5
+        - Joint_6
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+      open_loop_control: false
+      allow_nonzero_velocity_at_trajectory_end: true
+      allow_integration_in_goal_trajectories: true
+      constraints:
+        goal_time: 2.0
+      use_sim_time: $(arg use_sim)
+
+    gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - Gripper_Servo_Gear_Joint
+        - Gripper_Idol_Gear_Joint
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+      allow_nonzero_velocity_at_trajectory_end: true
+      constraints:
+        goal_time: 1.0
+      use_sim_time: $(arg use_sim)
