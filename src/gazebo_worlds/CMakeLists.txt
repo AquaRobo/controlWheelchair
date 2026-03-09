@@ -16,7 +16,7 @@ find_package(urdf REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 
 install(
-  DIRECTORY models photos worlds 
+  DIRECTORY models photos worlds launch
   DESTINATION share/${PROJECT_NAME}/
 )
 

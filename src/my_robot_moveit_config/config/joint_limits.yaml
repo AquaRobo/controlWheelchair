@@ -1,0 +1,74 @@
+# joint_limits.yaml
+default_velocity_scaling_factor: 1.0
+default_acceleration_scaling_factor: 1.0
+
+joint_limits:
+  Joint_1:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -3.14159  # ±180° (was -1.5707)
+    max_position: 3.14159
+    
+  Joint_2:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -2.0944   # ±120° (was -1.5707) - shoulder typically limited
+    max_position: 2.0944
+    
+  Joint_3:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -2.0944   # ±120° (was -1.5707)
+    max_position: 2.0944
+    
+  Joint_4:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -3.14159  # ±180° (was -1.5707)
+    max_position: 3.14159
+    
+  Joint_5:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -3.14159  # ±180° (was -1.5707) - wrist rotation
+    max_position: 3.14159
+    
+  Joint_6:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: false  # Continuous joint
+    
+  Gripper_Idol_Gear_Joint:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -1.49
+    max_position: 0.0
+    
+  Gripper_Servo_Gear_Joint:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: 0.0
+    max_position: 1.55

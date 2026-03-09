@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+        <xacro:arg name="use_sim" default="false"/>
+
+        <ros2_control name="my_robot" type="system">
+            
+            <hardware>
+              <xacro:if value="$(arg use_sim)">
+                <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+              </xacro:if>
+
+              <xacro:unless value="$(arg use_sim)">
+                <plugin>mock_components/GenericSystem</plugin>
+              </xacro:unless>
+            </hardware>
+
+
+            <joint name="Joint_1">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Joint_2">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Joint_3">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Joint_4">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Joint_5">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Joint_6">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Gripper_Idol_Gear_Joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+            <joint name="Gripper_Servo_Gear_Joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+
+        </ros2_control>
+    
+</robot>

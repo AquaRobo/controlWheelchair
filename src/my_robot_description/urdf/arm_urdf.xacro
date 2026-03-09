@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="my_robot_description">
+
+  <!-- Declare use_sim argument -->
+  <xacro:arg name="use_sim" default="false"/>
+
+  <!-- Include other XACRO/URDF files -->
+  <xacro:include filename="$(find my_robot_description)/urdf/my_robot_description.ros2_control.xacro"/>
+  <xacro:include filename="$(find my_robot_description)/urdf/moveo_urdf.urdf"/>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find my_robot_bringup)/config/ros2_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+
+
+
+  
+  <xacro:arg name="use_camera" default="false"/>
+
+  <xacro:include filename="$(find my_robot_description)/sensors/intel_rgbd_cam_d435.urdf.xacro"/>
+
+  <!-- Camera macro -->
+  <xacro:if value="$(arg use_camera)">
+    <!-- Camera Mount Link -->
+    <link name="camera_mount">
+      <visual>
+        <geometry>
+          <box size="0.05 0.08 0.01"/>
+        </geometry>
+        <material name="black">
+          <color rgba="0 0 0 1"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.05 0.08 0.01"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.05"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+      </inertial>
+    </link>
+
+    <!-- Mount Joint -->
+    <joint name="camera_mount_joint" type="fixed">
+      <parent link="wrist_link"/>
+      <child link="camera_mount"/>
+      <origin xyz="0.05 0 0.025" rpy="0 0 0"/> 
+    </joint>
+
+    
+    <xacro:intel_d435 parent="camera_mount" xyz="0 0 0.015" rpy="0 -1.57 3.14"/>
+  </xacro:if>
+
+</robot>
