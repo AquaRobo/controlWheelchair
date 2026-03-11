@@ -27,8 +27,8 @@ def launch_setup(context, *args, **kwargs):
     model_name = LaunchConfiguration('model_name').perform(context)
 
     robot_desc_dir = get_package_share_directory('my_robot_description')
-    xacro_file = os.path.join(robot_desc_dir, 'urdf', 'my_robot_urdf.xacro')
-    urdf_file = os.path.join(robot_desc_dir, 'urdf', 'my_robot_urdf.urdf')
+    xacro_file = os.path.join(robot_desc_dir, 'urdf', 'arm_urdf.xacro')
+    urdf_file = os.path.join(robot_desc_dir, 'urdf', 'arm_moveo_urdf.urdf')
 
     urdf_doc = xacro.process_file(
         xacro_file,
@@ -75,7 +75,7 @@ def generate_launch_description():
     use_camera = LaunchConfiguration('use_camera')
     gz_args = LaunchConfiguration('gz_args')
 
-    moveo_gazebo_dir = get_package_share_directory('moveo_gazebo')
+    moveo_gazebo_dir = get_package_share_directory('gazebo_worlds')
     robot_desc_dir = get_package_share_directory('my_robot_description')
     bringup_dir = get_package_share_directory('my_robot_bringup')
 
@@ -160,7 +160,7 @@ def generate_launch_description():
                     os.path.join(
                         bringup_dir,
                         'launch',
-                        'my_robot.launch.xml'
+                        'arm.launch.xml'
                     )
                 ),
                 launch_arguments={'use_sim': use_sim}.items()

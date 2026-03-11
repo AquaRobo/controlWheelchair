@@ -5,12 +5,12 @@
   <xacro:arg name="use_sim" default="false"/>
 
   <!-- Include other XACRO/URDF files -->
-  <xacro:include filename="$(find my_robot_description)/urdf/my_robot_description.ros2_control.xacro"/>
-  <xacro:include filename="$(find my_robot_description)/urdf/moveo_urdf.urdf"/>
+  <xacro:include filename="$(find my_robot_description)/urdf/arm_description.ros2_control.xacro"/>
+  <xacro:include filename="$(find my_robot_description)/urdf/arm_moveo_urdf.urdf"/>
 
   <gazebo>
     <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find my_robot_bringup)/config/ros2_controllers.yaml</parameters>
+      <parameters>$(find my_robot_bringup)/config/arm_controllers.yaml</parameters>
     </plugin>
   </gazebo>
 
