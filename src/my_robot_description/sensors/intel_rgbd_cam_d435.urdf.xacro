@@ -24,7 +24,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="${M_PI/2} 0.0 ${M_PI/2}"/>
         <geometry>
-          <mesh filename="package://my_robot_description/meshes/d435.stl" />
+          <mesh filename="package://my_robot_description/meshes/arm_meshes/d435.stl" />
         </geometry>
         <material name="black">
           <color rgba="0 0 0 1"/>

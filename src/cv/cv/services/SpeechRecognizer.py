@@ -1,10 +1,12 @@
 import time
-import torch
-import librosa
-import whisper
 import numpy as np
 import sounddevice as sd
+import whisper
+import librosa
+import torch
+
 from cv.helper.AudioBuffer import AudioBuffer
+
 
 class SpeechRecognizer:
     def __init__(self, config: dict, model_path: str):

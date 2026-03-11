@@ -30,7 +30,7 @@ setup(
         'console_scripts': [
             'object_detection_node = cv.nodes.ObjectDetectionNode:main',
             'room_identifier_node = cv.nodes.RoomIdentifierNode:main',
-            'speach_recognizer_node = cv.nodes.SpeachRecognizerNode:main',
+            'speech_recognizer_node = cv.nodes.SpeechRecognizerNode:main',
             'camera_visualizer_test_node = cv.tests.CameraVisualizerTestNode:main',
         ],
     },
