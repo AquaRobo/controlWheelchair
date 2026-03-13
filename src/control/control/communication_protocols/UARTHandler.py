@@ -1,7 +1,7 @@
 import serial
-import struct
 from zope.interface import implementer
 from control.interfaces.ICommhandler import ICommhandler
+from control.helpers.DataStructer import DataStructer
 from control.exceptions.CommInitException import CommInitError
 from control.exceptions.CommCloseException import CommCloseError
 from control.exceptions.CommReadException import CommReadError
@@ -16,7 +16,6 @@ class UARTHandler:
         self.baudrate = UART_config['baudrate']
         self.timeout = UART_config['timeout']
         self.UART = None
-        self.packet = bytearray()
         self.__initialize()
 
     def __initialize(self) -> None:
@@ -27,18 +26,9 @@ class UARTHandler:
 
     def sendData(self, data: list) -> None:
         try:
-            for element in data:
-                if isinstance(element, str):
-                    self.packet.append(ord(element))
-                elif isinstance(element, (float)):
-                    self.packet.extend(struct.pack('<f', element))
-                elif isinstance(element, (int)):
-                    self.packet.append(element & 0xFF) 
-                else:
-                    raise ValueError(f"Unsupported data type: {type(element)}")
-            self.UART.write(self.packet)
-            self.UART.flush()  # Ensure data is sent immediately
-            self.packet.clear()  # Clear the packet after sending
+            packet = DataStructer.to_bytes(data)
+            self.UART.write(packet)
+            self.UART.flush()
         except Exception as e:
             raise CommWriteError(f"Error writing to UART device: {e}")
 

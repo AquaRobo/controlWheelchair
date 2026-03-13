@@ -12,16 +12,16 @@ class MotorDriver:
         motors_speeds = self.__buildMotorsArray(motors_dict)
         self.commHandler.sendData(motors_speeds)
 
-    def __buildMotorsArray(self, motors_drict: dict[str, Motors]) -> list:
+    def __buildMotorsArray(self, motors_dict: dict[str, Motors]) -> list:
         """Converts motor dict to list and send its speed.
         Args:
             motors_dict: Dictionary holding motors objects
         Returns:
-            str:  Motor's data formated in a list.
+            list: Motor's data formatted in a list.
         Example:
             data = ["w", motor.current_speed, .....for number of motors]
         """
         data = ["w"]
-        for motor in motors_drict.values():
-            data.extend([float(motor.current_pwm)]) 
+        for motor in motors_dict.values():
+            data.extend([float(motor.current_pwm)])
         return data

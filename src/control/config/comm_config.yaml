@@ -1,5 +1,5 @@
 # Determine the communication protocol and its parameters
-actuators_protocol: UART # Options: I2C, SPI, CAN, UART
+actuators_protocol: SPI # Options: I2C, SPI, CAN, UART
 sensors_protocol: SPI # Options: I2C, SPI, CAN, UART
 i2c_actuators_config:
   address: 0x40
@@ -7,7 +7,7 @@ i2c_actuators_config:
 spi_actuators_config:
   register: 0xb0
   address: 0x68
-  frequency: 500000
+  frequency: 4000000   # 4 MHz
   data_size: 40
   bus: 0
   device: 0
