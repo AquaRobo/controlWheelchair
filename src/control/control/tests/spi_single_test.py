@@ -9,10 +9,9 @@ class SingleSPITest:
 
     def testSend(self):
         data = ["w", 100.0, -100.0]
-        data_bytes = struct.pack('<cff', data[0].encode(), data[1], data[2])
-        print(f"Data: {data} -> Bytes: {data_bytes}")
+        print(f"Data: {data}")
         while True:
-            self.commHandler.sendData(data_bytes)
+            self.commHandler.sendData(data)
 
     def testRandomizeSendingData(self):
         left_speed = (random() - 0.5) * 200  
@@ -24,10 +23,9 @@ class SingleSPITest:
             # Update random values each iteration
             data[1] = (random() - 0.5) * 200
             data[2] = (random() - 0.5) * 200
-            data_bytes = struct.pack('<cff', data[0].encode(), data[1], data[2])
-            print(f"Data: {data} -> Bytes: {data_bytes}")
-            self.commHandler.sendData(data_bytes)
-            time.sleep(3)
+            print(f"Data: {data}")
+            self.commHandler.sendData(data)
+            time.sleep(0.00001)
     
     def testRecieveData(self):
         while True:
@@ -39,11 +37,10 @@ class SingleSPITest:
             
     def testTransfer(self):
         data = ["w", 100.0, -100.0]
-        data_bytes = struct.pack('<cff', data[0].encode(), data[1], data[2])
         while True:
-            recieved_data = self.commHandler.transfer(data_bytes)
-            print(f"Data: {data} -> Bytes: {data_bytes}")
-            print(f"Data: {recieved_data}")
+            recieved_data = self.commHandler.transfer(data)
+            print(f"Data: {data}")
+            print(f"Recieved: {recieved_data}")
             time.sleep(3)
     
     def testRandomizeTransferingData(self):
@@ -55,9 +52,8 @@ class SingleSPITest:
             # Update random values each iteration
             data[1] = (random() - 0.5) * 200
             data[2] = (random() - 0.5) * 200
-            data_bytes = struct.pack(fmt, data[0].encode(), data[1], data[2])
-            print(f"Data: {data} -> Bytes: {data_bytes}")
-            recieved_data = self.commHandler.transfer(data_bytes)
+            print(f"Data: {data}")
+            recieved_data = self.commHandler.transfer(data)
             unpacked_data = struct.unpack(fmt, bytes(recieved_data))
             print(f"Recieved Bytes: {unpacked_data}")
 
@@ -68,8 +64,8 @@ if __name__ == "__main__":
     try:
         test = SingleSPITest()
         # test.testSend()
-        # test.testRandomizeSendingData()
-        test.testRecieveData()
+        test.testRandomizeSendingData()
+        # test.testRecieveData()
         # test.testTransfer()
         # test.testRandomizeTransferingData()
     except KeyboardInterrupt:

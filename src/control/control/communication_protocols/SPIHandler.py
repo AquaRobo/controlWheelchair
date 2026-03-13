@@ -1,6 +1,7 @@
 import spidev
 from zope.interface import implementer
 from control.interfaces.ICommhandler import ICommhandler
+from control.helpers.DataStructer import DataStructer
 from control.exceptions.CommInitException import CommInitError
 from control.exceptions.CommCloseException import CommCloseError
 from control.exceptions.CommReadException import CommReadError
@@ -30,7 +31,8 @@ class SPIHandler:
 
     def sendData(self, data: list) -> None:
         try:
-            self.spi.writebytes(data)
+            packet = DataStructer.to_byte_list(data)
+            self.spi.writebytes(packet)
         except Exception as e:
             raise CommWriteError(f"Error writing to SPI device: {e}")
 
@@ -43,7 +45,8 @@ class SPIHandler:
         
     def transfer(self, data: list):
         try:
-            result = self.spi.xfer2(data)
+            packet = DataStructer.to_byte_list(data)
+            result = self.spi.xfer2(packet)
             return result
         except Exception as e:
             raise CommReadError(f"Error transferring data via SPI: {e}")

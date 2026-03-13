@@ -16,7 +16,7 @@ class NavigationNode(Node):
         self.pid_params = Configurator("control").fetchData(Configurator.PID_PARAMS)
         self._logger = self.get_logger()
         self._logger.info(f"PID Parameters: {self.pid_params}")
-        self.pid_yaw = PIDController(self.pid_params["yaw_KP"], self.pid_params["yaw_KI"], self.pid_params["yaw_KD"], setpoint=0.0)
+        self.pid_yaw = PIDController(self.pid_params["yaw_KP"], self.pid_params["yaw_KI"], self.pid_params["yaw_KD"], setpoint=None)
         self.speed_evaluator = MotorSpeedEvaluator()
         self.motor_driver = MotorDriver()
         self.navigation = Navigation(self.motor_driver, self.speed_evaluator)
@@ -42,9 +42,6 @@ class NavigationNode(Node):
         cosy_cosp = 1 - 2 * (msg.orientation.y * msg.orientation.y + msg.orientation.z * msg.orientation.z)
         self.yaw = np.degrees(np.arctan2(siny_cosp, cosy_cosp))
 
-    def __updateSetpoint(self) -> None:
-        self.pid_yaw.updateSetpoint(self.yaw)
-
     def __isMovingHorizontal(self) -> bool:
         return (abs(self.x_axis) > 0.1 and abs(self.z_axis) < 0.1)
     
@@ -60,11 +57,14 @@ class NavigationNode(Node):
     def navigate(self):
         if self.x_axis is not None and self.z_axis is not None:
             if self.__isMovingHorizontal():
-                if not self.heading_latched:
-                    self.__updateSetpoint()
+                if not self.heading_latched and self.yaw is not None:
+                    self.pid_yaw.updateSetpoint(self.yaw)
                     self.heading_latched = True
                 if self.__isYawControllerReady():
                     self._stabalizeHorizontal()
+                else:
+                    self.navigation.navigate(self.x_axis, self.z_axis, 0.0)
+                    self.publishOnWheels()
             else:
                 self.heading_latched = False
                 self.navigation.navigate(self.x_axis, self.z_axis, 0.0)

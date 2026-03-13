@@ -45,7 +45,7 @@ def generate_launch_description():
         package="control",
         executable="navigation_node",
         output="screen", 
-        parameters=[{'use_sim_time': True}]
+        parameters=[{'use_sim_time': False}]
     )
 
     odom_node = Node(
@@ -79,10 +79,10 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        joystick_launch,
-        wheelchair_bringup,
+        # joystick_launch,
+        # wheelchair_bringup,
         navigation_node,
-        odom_node,
+        # odom_node,
         twist_mux_node,
         # localization_launch,
         # lifelong_slam_launch,
