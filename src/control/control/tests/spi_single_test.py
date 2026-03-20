@@ -5,7 +5,7 @@ import time
 
 class SingleSPITest:
     def __init__(self):
-        self.commHandler = Dispatcher().get_communication_handler("ACTUATOR")
+        self.commHandler = Dispatcher().get_communication_handler("ESP")
 
     def testSend(self):
         data = ["w", 100.0, -100.0]
@@ -33,20 +33,21 @@ class SingleSPITest:
             data = self.commHandler.receiveData()
             unpacked_data = struct.unpack(fmt, bytes(data))
             print(f"Recieved Bytes: {unpacked_data}")
-            time.sleep(3)
+            time.sleep(0.05)
             
     def testTransfer(self):
-        data = ["w", 100.0, -100.0]
+        data = ['w', 100.0, -100.0]
+        fmt = '<fff'
         while True:
             recieved_data = self.commHandler.transfer(data)
-            print(f"Data: {data}")
-            print(f"Recieved: {recieved_data}")
+            unpacked_data = struct.unpack(fmt, bytes(recieved_data))
+            print(f"Recieved Bytes: {unpacked_data}")
             time.sleep(3)
     
     def testRandomizeTransferingData(self):
         left_speed = (random() - 0.5) * 200  
         right_speed = (random() - 0.5) * 200  
-        fmt = '<cff'
+        fmt = '<fff'
         data = ["w", left_speed, right_speed]
         while True:
             # Update random values each iteration
@@ -57,17 +58,17 @@ class SingleSPITest:
             unpacked_data = struct.unpack(fmt, bytes(recieved_data))
             print(f"Recieved Bytes: {unpacked_data}")
 
-            time.sleep(3)
+            time.sleep(0.05)
 
 if __name__ == "__main__":
 
     try:
         test = SingleSPITest()
         # test.testSend()
-        test.testRandomizeSendingData()
+        # test.testRandomizeSendingData()
         # test.testRecieveData()
         # test.testTransfer()
-        # test.testRandomizeTransferingData()
+        test.testRandomizeTransferingData()
     except KeyboardInterrupt:
         print("Comm Closed")
         test.commHandler.close()
