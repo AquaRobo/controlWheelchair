@@ -3,8 +3,8 @@ from random import random
 
 class MultipleSPITest:
     def __init__(self):
-        self.actuators_commHandler = Dispatcher().get_communication_handler("ACTUATOR")
-        self.sensors_commHandler = Dispatcher().get_communication_handler("SENSOR")
+        self.actuators_commHandler = Dispatcher().get_communication_handler("ESP")
+        self.sensors_commHandler = Dispatcher().get_communication_handler("STM")
 
     def testSend(self):
         data = ["w", 100.0, -100.0]

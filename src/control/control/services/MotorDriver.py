@@ -6,7 +6,7 @@ from utils.Dispatcher import Dispatcher
 @implementer(IMotorDriver)
 class MotorDriver:
     def __init__(self):
-        self.commHandler = Dispatcher().get_communication_handler("ACTUATOR")
+        self.commHandler = Dispatcher().get_communication_handler("ESP")
 
     def drive(self, motors_dict: dict[str, Motors]) -> None:
         motors_speeds = self.__buildMotorsArray(motors_dict)
