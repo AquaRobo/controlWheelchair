@@ -26,10 +26,18 @@ from launch.actions import (
 from utils.EnvParams import EnvParams
 
 def generate_launch_description():
+    ## Environment parameters
     use_sim_time = EnvParams().USE_SIM_TIME == 'true'
-    use_lidar_sim = LaunchConfiguration('use_lidar_sim')
-    lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
+    use_mock_hardware = EnvParams().USE_MOCK_HARDWARE == 'true'
 
+    ## Simulation arguments
+    use_lidar_sim = LaunchConfiguration('use_lidar_sim')
+    use_mock_hardware = LaunchConfiguration('use_mock_hardware')
+    lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
+    mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value=use_mock_hardware)
+
+
+    ## Paths
     robot_description_pkg = get_package_share_directory('my_robot_description')
     pkg_worlds = get_package_share_directory('gazebo_worlds')
 
@@ -38,7 +46,11 @@ def generate_launch_description():
     world_path = os.path.join(pkg_worlds, 'worlds', 'house_turtlebot.world')
 
     robot_description = ParameterValue(
-        Command(['xacro ', urdf_path, ' use_lidar_sim:=', use_lidar_sim]),
+        Command([
+            'xacro ', urdf_path,
+            ' use_lidar_sim:=', use_lidar_sim,
+            ' use_mock_hardware:=', use_mock_hardware,
+        ]),
         value_type=str
     )
 
@@ -127,11 +139,12 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        lidar_sim_arg,
-        set_gz_resource_path,
-        robot_state_publisher_node,
-        gazebo,
-        gz_spawn_entity,
+        # lidar_sim_arg,
+        mock_hw_arg,
+        # set_gz_resource_path,
+        # robot_state_publisher_node,
+        # gazebo,
+        # gz_spawn_entity,
         gz_ros2_bridge,
         delayed_joint_state_spawner,
         delayed_simple_velocity_spawner,

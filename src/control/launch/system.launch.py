@@ -18,7 +18,7 @@ def generate_launch_description():
         lidar_sim = 'true'
 
     if EnvParams().VISUALIZATION == "ON":
-        launch_file = "world.launch.py"
+        launch_file = "world_viz.launch.py"
     else:
         launch_file = "world_core.launch.py"
 
@@ -91,11 +91,11 @@ def generate_launch_description():
     return LaunchDescription([
         wheelchair_bringup,
         lidar_launch,
-        navigation_node,
+        # navigation_node,
         # odom_node,
-        twist_mux_node,
-        lifelong_slam_launch,
-        navigation_launch,
-        auto_nav_node,
-        speach_recognizer_node,
+        # twist_mux_node,
+        # lifelong_slam_launch,
+        # navigation_launch,
+        # auto_nav_node,
+        # speach_recognizer_node,
     ])
