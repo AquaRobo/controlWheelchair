@@ -92,7 +92,7 @@ def generate_launch_description():
         wheelchair_bringup,
         lidar_launch,
         navigation_node,
-        odom_node,
+        # odom_node,
         twist_mux_node,
         lifelong_slam_launch,
         navigation_launch,

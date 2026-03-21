@@ -1,0 +1,5 @@
+class CommReadError(Exception):
+    """Raised when a communication protocol fails to read data"""
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
