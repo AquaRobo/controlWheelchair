@@ -20,14 +20,12 @@ from utils.EnvParams import EnvParams
 def generate_launch_description():
     ## Environment parameters
     use_sim_time = EnvParams().USE_SIM_TIME == 'true'
-    use_mock_hardware = EnvParams().USE_MOCK_HARDWARE == 'true'
 
     ## Simulation arguments
     use_lidar_sim = LaunchConfiguration('use_lidar_sim')
     use_mock_hardware = LaunchConfiguration('use_mock_hardware')
     lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
-    mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value=use_mock_hardware)
-
+    mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value='true')
 
     ## Paths
     robot_description_pkg = get_package_share_directory('my_robot_description')
