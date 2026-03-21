@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="Wheelchair_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:arg name="use_lidar_sim" default="true"/>
     <!-- Wheels -->
     <gazebo reference="lb_1">
         <mu1>1000000000000000.0</mu1>
@@ -68,57 +67,59 @@
     </gazebo>
 
     <!-- IMU -->
-    <gazebo reference="imu_link">
-        <sensor name="imu" type="imu">
-            <always_on>true</always_on>
-            <update_rate>100</update_rate>
-            <gz_frame_id>imu_link</gz_frame_id>
-            <topic>imu</topic>
-            <imu>
-                <angular_velocity>
-                    <x>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>2e-4</stddev>
-                        </noise>
-                    </x>
-                    <y>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>2e-4</stddev>
-                        </noise>
-                    </y>
-                    <z>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>2e-4</stddev>
-                        </noise>
-                    </z>
-                </angular_velocity>
-                <linear_acceleration>
-                    <x>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>1.7e-2</stddev>
-                        </noise>
-                    </x>
-                    <y>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>1.7e-2</stddev>
-                        </noise>
-                    </y>
-                    <z>
-                        <noise type="gaussian">
-                            <mean>0.0</mean>
-                            <stddev>1.7e-2</stddev>
-                        </noise>
-                    </z>
-                </linear_acceleration>
-            </imu>
-        </sensor>
-    </gazebo>
-
+    <xacro:if value="$(arg use_imu_sim)">
+        <gazebo reference="imu_link">
+            <sensor name="imu" type="imu">
+                <always_on>true</always_on>
+                <update_rate>100</update_rate>
+                <gz_frame_id>imu_link</gz_frame_id>
+                <topic>imu</topic>
+                <imu>
+                    <angular_velocity>
+                        <x>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>2e-4</stddev>
+                            </noise>
+                        </x>
+                        <y>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>2e-4</stddev>
+                            </noise>
+                        </y>
+                        <z>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>2e-4</stddev>
+                            </noise>
+                        </z>
+                    </angular_velocity>
+                    <linear_acceleration>
+                        <x>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>1.7e-2</stddev>
+                            </noise>
+                        </x>
+                        <y>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>1.7e-2</stddev>
+                            </noise>
+                        </y>
+                        <z>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>1.7e-2</stddev>
+                            </noise>
+                        </z>
+                    </linear_acceleration>
+                </imu>
+            </sensor>
+        </gazebo>
+    </xacro:if>
+        
     <!--Lidar-->
     <xacro:if value="$(arg use_lidar_sim)">
         <gazebo reference='lidar_r'>

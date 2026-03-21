@@ -22,13 +22,18 @@ def generate_launch_description():
     else:
         launch_file = "world_core.launch.py"
 
+    if EnvParams().USE_MOCK_HARDWARE == 'true':
+        use_mock_hardware = 'true'
+    else:
+        use_mock_hardware = 'false'
+
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
     nav2_params = os.path.join(get_package_share_directory('control'),'config','nav2_params.yaml')
     
     wheelchair_bringup = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory("my_robot_bringup"), "launch"), f"/{launch_file}"]),
-                    launch_arguments={'use_lidar_sim': lidar_sim}.items()
+                    launch_arguments={'use_lidar_sim': lidar_sim, 'use_mock_hardware': use_mock_hardware}.items()
     )
 
     lidar_launch = IncludeLaunchDescription(
@@ -91,9 +96,9 @@ def generate_launch_description():
     return LaunchDescription([
         wheelchair_bringup,
         lidar_launch,
-        # navigation_node,
-        # odom_node,
-        # twist_mux_node,
+        navigation_node,
+        odom_node,
+        twist_mux_node,
         # lifelong_slam_launch,
         # navigation_launch,
         # auto_nav_node,
