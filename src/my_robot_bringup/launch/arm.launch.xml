@@ -37,13 +37,14 @@
 
   
   <group if="$(var use_sim)">
-    <node pkg="my_robot_commander_py" exec="commander" name="commander" output="screen">
+    <node pkg="control" exec="arm_commander_node" name="commander" output="screen">
       <param name="use_sim_time" value="true"/>
     </node>
   </group>
   <group unless="$(var use_sim)">
-    <node pkg="my_robot_commander_py" exec="commander" name="commander" output="screen"/>
+    <node pkg="control" exec="arm_commander_node" name="commander" output="screen"/>
   </group>
+
 
   <group if="$(var use_sim)">
     <node pkg="cv" exec="speech_recognizer_node" name="speech_recognizer_node" output="screen">
@@ -53,5 +54,6 @@
   <group unless="$(var use_sim)">
     <node pkg="cv" exec="speech_recognizer_node" name="speech_recognizer_node" output="screen"/>
   </group>
+  
 
 </launch>

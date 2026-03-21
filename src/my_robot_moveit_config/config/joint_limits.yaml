@@ -53,7 +53,9 @@ joint_limits:
     max_velocity: 1.0
     has_acceleration_limits: true
     max_acceleration: 1.0
-    has_position_limits: false  # Continuous joint
+    has_position_limits: true
+    min_position: -0.35
+    max_position: 0.35
     
   Gripper_Idol_Gear_Joint:
     has_velocity_limits: true

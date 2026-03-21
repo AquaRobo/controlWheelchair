@@ -72,14 +72,14 @@ class ArmPoseNode(Node):
         roll, pitch, yaw = euler_from_quaternion([pose["qx"], pose["qy"], pose["qz"], pose["qw"]])
         return {"x":pose["x"], "y":pose["y"], "z":pose["z"], "roll":roll, "pitch":pitch, "yaw":yaw}
 
-    def wait_for_joints(self, target_positions, tol=0.05, timeout=5.0):
+    def wait_for_joints(self, target_positions, tol=0.12, timeout=4.0):
         start_time = time.time()
         while time.time() - start_time < timeout:
-            rclpy.spin_once(self, timeout_sec=0.05)
             errors = [abs(a - b) for a, b in zip(self.current_joints, target_positions)]
             if max(errors) < tol:
-                break
-            time.sleep(0.05)
+                return True
+            time.sleep(0.01)
+        return False
 
     # ----------------- Subscribers -----------------
     def joint_state_callback(self, msg: JointState):
