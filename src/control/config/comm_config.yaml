@@ -8,7 +8,7 @@ spi_esp_config:
   register: 0xb0
   address: 0x68
   frequency: 4000000   # 4 MHz
-  data_size: 16
+  data_size: 40
   bus: 0
   device: 0
 uart_esp_config:

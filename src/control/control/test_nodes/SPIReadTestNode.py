@@ -11,7 +11,7 @@ class SPIReadTestNode(Node):
         self._logger = self.get_logger()
 
     def testRead(self):
-        fmt = '<ffff'
+        fmt = '<' + 'f' * 10  
         data = self.commHandler.receiveData()
         unpacked_data = struct.unpack(fmt, bytes(data))
         self._logger.info(f"Recieved Bytes: {unpacked_data}")

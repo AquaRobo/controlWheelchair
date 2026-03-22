@@ -35,7 +35,7 @@ class Dispatcher:
     def get_communication_handler(module_type: str) -> object:
         """Dynamically fetch and instantiate the communication handler based on configuration.
         Args:
-            module_type (str): The type of module requesting the communication handler.
+            module_type (str): The microcontroller type either "ESP" or "STM".
         Returns:
             object: An instance of the selected communication handler."""
         comm_dict = Configurator("control").fetchData(Configurator.COMM_HANDLER)

@@ -1,10 +1,7 @@
 """
 Pi-side launch file.
-Starts: robot_state_publisher and ros2_control_node.
+Starts: robot_state_publisher, ros2_control_node and the controllers.
 Run this on the Raspberry Pi.
-
-When Gazebo is not running on the Pi, we use mock_components/GenericSystem so
-controller_manager is still available and controllers can be spawned locally.
 """
 
 import os
@@ -23,8 +20,10 @@ def generate_launch_description():
 
     ## Simulation arguments
     use_lidar_sim = LaunchConfiguration('use_lidar_sim')
+    use_imu_sim = LaunchConfiguration('use_imu_sim')
     use_mock_hardware = LaunchConfiguration('use_mock_hardware')
     lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
+    imu_sim_arg = DeclareLaunchArgument('use_imu_sim', default_value='true')
     mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value='true')
 
     ## Paths
@@ -37,6 +36,7 @@ def generate_launch_description():
         Command([
             'xacro ', urdf_path,
             ' use_lidar_sim:=', use_lidar_sim,
+            ' use_imu_sim:=', use_imu_sim,
             ' use_mock_hardware:=', use_mock_hardware,
         ]),
         value_type=str
@@ -89,6 +89,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         lidar_sim_arg,
+        imu_sim_arg,
         mock_hw_arg,
         robot_state_publisher_node,
         ros2_control_node,
