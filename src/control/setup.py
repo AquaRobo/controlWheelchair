@@ -39,6 +39,7 @@ setup(
             'spi_read_test_node = control.test_nodes.SPIReadTestNode:main',
             'arm_commander_node = control.nodes.ArmCommander:main',
             'arm_pose_node = control.nodes.ArmPoseNode:main',
+            'imu_node = control.nodes.IMUNode:main',
         ],
     },
 )
