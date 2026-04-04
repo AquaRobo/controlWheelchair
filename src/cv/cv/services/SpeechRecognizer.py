@@ -1,8 +1,8 @@
 import time
 import numpy as np
 import sounddevice as sd
-import whisper
 import torch
+from faster_whisper import WhisperModel
 from collections import deque
 
 from cv.helper.AudioBuffer import AudioBuffer
@@ -72,7 +72,6 @@ class SpeechRecognizer:
         self.command_duration = config.get("command_duration", 3)
         self.command_buffer   = AudioBuffer(self.sample_rate, self.command_duration)
 
-
         # ── Audio processor ───────────────────────────────────────────────
         self.audio_processor = AudioProcessor(
             target_sample_rate=self.sample_rate,
@@ -101,7 +100,7 @@ class SpeechRecognizer:
         self._last_detection_time = 0.0
         self._armed               = True
         self._silence_streak      = 0
-        self._recording_command   = False   # gates which buffer gets audio
+        self._recording_command   = False
 
         # ── Whisper ───────────────────────────────────────────────────────
         self.whisper_model      = None
@@ -130,7 +129,6 @@ class SpeechRecognizer:
         if status:
             return
         samples = indata[:, 0]
-        # Route audio to the correct buffer depending on current state
         if self._recording_command:
             self.command_buffer.add(samples)
         else:
@@ -142,9 +140,10 @@ class SpeechRecognizer:
         self.wake_word_model.eval()
 
     def _loadWhisperModel(self):
-        self.whisper_model = whisper.load_model(
+        self.whisper_model = WhisperModel(
             self.whisper_model_size,
-            device=self.device,
+            device="cpu",        # Pi has no CUDA
+            compute_type="int8"  # quantized — much faster and lower RAM on Pi
         )
 
     # =========================================================
@@ -152,10 +151,6 @@ class SpeechRecognizer:
     # =========================================================
 
     def calibrate_noise_floor(self, seconds: float = 3.0):
-        """
-        Listen silently for `seconds` and auto-set energy_threshold
-        to 4× the measured noise floor. Call once at startup.
-        """
         print(f"Calibrating noise floor for {seconds}s — stay quiet...")
         deadline = time.time() + seconds
         samples  = []
@@ -171,8 +166,6 @@ class SpeechRecognizer:
 
         noise_rms             = float(np.mean(samples))
         self.energy_threshold = noise_rms * 4.0
-        # print(f"   Noise floor RMS : {noise_rms:.5f}")
-        # print(f"   Auto threshold  : {self.energy_threshold:.5f}\n")
 
     # =========================================================
     # WAKE WORD DETECTION
@@ -181,19 +174,9 @@ class SpeechRecognizer:
     def _runWakeWordDetection(self, mel_spec: torch.Tensor) -> tuple[str, float, float]:
         prediction, confidence, margin = self.wake_word_model.predict(mel_spec)
         label = self.class_map[prediction]
-        # print(
-        #     f"Wake Word Detection — "
-        #     f"Predicted: {label}  "
-        #     f"Conf: {confidence:.4f}  "
-        #     f"Margin: {margin:.4f}"
-        # )
         return label, confidence, margin
 
     def _detect_wake_word(self) -> str:
-        """
-        Blocking loop — runs the full 6-gate pipeline and returns
-        the confirmed wake word label once detected.
-        """
         while True:
             if not self.audio_buffer.ready():
                 continue
@@ -207,16 +190,13 @@ class SpeechRecognizer:
 
                 if not self._armed and self._silence_streak >= self.silence_frames_needed:
                     self._armed = True
-                    # print("\n[armed — ready for next word]")
 
-                # print(f"\r[silence] RMS={rms:.5f}  armed={self._armed}   ", end="")
                 continue
 
             self._silence_streak = 0
 
             # ── Gate 2: disarmed guard ────────────────────────────────────
             if not self._armed:
-                # print(f"\r[disarmed — waiting for silence]   ", end="")
                 continue
 
             # ── Gate 3: model inference ───────────────────────────────────
@@ -234,17 +214,6 @@ class SpeechRecognizer:
             )
             self.vote_buffer.push(effective_label, confidence, margin)
 
-            vote_count = sum(
-                1 for v in self.vote_buffer.votes
-                if v[0] == effective_label
-            )
-            # print(
-            #     f"\r[{effective_label:6s}] "
-            #     f"conf={confidence:.3f}  margin={margin:.3f}  "
-            #     f"RMS={rms:.4f}  votes={vote_count}/{self.vote_buffer.window_size}   ",
-            #     end=""
-            # )
-
             # ── Gate 5: consensus voting ──────────────────────────────────
             consensus = self.vote_buffer.get_consensus(
                 self.min_confidence, self.min_margin
@@ -260,21 +229,15 @@ class SpeechRecognizer:
                 continue
 
             # ══ All gates passed ══════════════════════════════════════════
-            # print(
-            #     f"\nCONFIRMED: {detected_label} "
-            #     f"| avg_conf={avg_conf:.3f} "
-            #     f"| avg_margin={avg_margin:.3f}"
-            # )
             self._last_detection_time = now
             self._armed               = False
             self._silence_streak      = 0
             self.vote_buffer.clear()
 
-            # Flush wake word audio and switch routing to command buffer
             self.audio_buffer.clear()
             self.command_buffer.clear()
             self._recording_command = True
-            time.sleep(0.3)   # brief pause so user knows detection happened
+            time.sleep(0.3)
 
             return detected_label
 
@@ -283,20 +246,14 @@ class SpeechRecognizer:
     # =========================================================
 
     def _record_command(self) -> np.ndarray:
-        """
-        Wait for the dedicated command buffer to fill up with
-        exactly command_duration seconds of fresh audio, then
-        return it — identical behaviour to the original code.
-        """
         print("Listening for command...")
 
-        # Block until the command buffer is full
         while not self.command_buffer.ready():
             time.sleep(0.05)
 
         audio                   = self.command_buffer.get()
         self.command_buffer.clear()
-        self._recording_command = False   # switch routing back to wake word buffer
+        self._recording_command = False
 
         print(f"Command captured — {len(audio) / self.sample_rate:.1f}s")
         return audio
@@ -308,12 +265,12 @@ class SpeechRecognizer:
     def _runWhisper(self, audio: np.ndarray) -> str:
         if self.whisper_model is None:
             return ""
-        result = self.whisper_model.transcribe(
+
+        segments, _ = self.whisper_model.transcribe(
             audio,
-            language="en",
-            fp16=(self.device == "cuda"),
+            language="en"
         )
-        return result["text"].strip()
+        return " ".join(segment.text for segment in segments).strip()
 
     def _getCommandedRoom(self, transcription: str) -> str:
         for room in self.config.get("rooms", []):
@@ -333,16 +290,7 @@ class SpeechRecognizer:
                 return action
         return ""
 
-    # =========================================================
-    # PUBLIC API
-    # =========================================================
-
     def recognizeSpeech(self) -> tuple[str, str, str]:
-        """
-        Blocks until a wake word is confirmed, records the full
-        command into a dedicated buffer, runs Whisper, then
-        returns (room, obj, action).
-        """
         wake_word = self._detect_wake_word()
         audio     = self._record_command()
 
