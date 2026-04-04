@@ -1,3 +1,4 @@
+import threading
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -16,65 +17,93 @@ class SpeechRecognizerNode(Node):
             Configurator.SPEECH_RECOGNIZER
         )
 
-        model_dir = UtilityMethods.getPackageModels("cv")
-        model_path = f"{model_dir}/speech_recognizer.pt"
+        model_dir  = UtilityMethods.getPackageModels("cv")
+        model_path = f"{model_dir}/best_wakeword_model3.pt"
 
-        self.speech_recognizer = SpeechRecognizer(
-            self.config,
-            model_path
+        self.speech_recognizer = SpeechRecognizer(self.config, model_path)
+        self.speech_recognizer.calibrate_noise_floor(seconds=3.0)
+
+        self.room_pub    = self.create_publisher(String, "/commanded_room",   10)
+        self.object_pub  = self.create_publisher(String, "/commanded_object", 10)
+        self.actions_pub = self.create_publisher(String, "/commanded_action", 10)
+
+        self._detection_thread = threading.Thread(
+            target=self._detection_loop,
+            daemon=True
         )
-
-        self.room_pub = self.create_publisher(
-            String,
-            "/commanded_room",
-            10
-        )
-
-        self.object_pub = self.create_publisher(
-            String,
-            "/commanded_object",
-            10
-        )
-
-        self.actions_pub = self.create_publisher(
-            String,
-            "/commanded_action",
-            10
-        )
-
-        self.timer = self.create_timer(0.1, self._run)
+        self._detection_thread.start()
 
         self.get_logger().info("SpeechRecognizerNode started")
 
+    # =========================================================
+    # DETECTION LOOP (background thread)
+    # =========================================================
 
-    def _run(self):
-        room, obj, action = self.speech_recognizer.recognizeSpeech()
+    def _detection_loop(self):
+        while rclpy.ok():
+            try:
+                room, obj, action = self.speech_recognizer.recognizeSpeech()
+            except Exception as e:
+                self.get_logger().error(f"SpeechRecognizer error: {e}")
+                continue
 
+            if any([room, obj, action]):
+                self.executor.create_task(
+                    self._publish_results(room, obj, action)
+                )
+
+    # =========================================================
+    # PUBLISH (executor thread)
+    # =========================================================
+
+    async def _publish_results(self, room: str, obj: str, action: str):
         if room:
-            msg = String()
+            msg      = String()
             msg.data = room.upper()
             self.room_pub.publish(msg)
             self.get_logger().info(f"Published Commanded Room: {msg.data}")
 
         if obj:
-            msg = String()
+            msg      = String()
             msg.data = obj.upper()
             self.object_pub.publish(msg)
             self.get_logger().info(f"Published Commanded Object: {msg.data}")
 
         if action:
-            msg = String()
+            msg      = String()
             msg.data = action.upper()
             self.actions_pub.publish(msg)
             self.get_logger().info(f"Published Commanded Action: {msg.data}")
 
+    # =========================================================
+    # CLEANUP
+    # =========================================================
+
+    def destroy_node(self):
+        self.speech_recognizer.end_stream()
+        super().destroy_node()
+
+
+# =========================================================
+# MAIN
+# =========================================================
 
 def main(args=None):
     rclpy.init(args=args)
     node = SpeechRecognizerNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        # FIX 2: guard against double shutdown — rclpy may already
+        # be shut down if the context was invalidated during spin
+        try:
+            rclpy.shutdown()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

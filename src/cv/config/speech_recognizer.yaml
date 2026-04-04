@@ -1,15 +1,37 @@
-# Audio
+# ── Audio ─────────────────────────────────────────────────────
 sample_rate: 16000
-listen_duration: 3
-buffer_size: 16000
+listen_duration: 2          # wake word window — match model training duration
+buffer_size: 32000          # sample_rate × listen_duration
 
-# Wake word
-wake_word_threshold: 0.4
+# ── Device ────────────────────────────────────────────────────
+device: cpu                 # or "cuda" if GPU is available
 
-# Whisper
+# ── Wake word detection ───────────────────────────────────────
+min_confidence: 0.92        # per-frame minimum softmax confidence
+min_margin: 0.75            # per-frame minimum gap between top-1 and top-2
+
+# ── Vote buffer ───────────────────────────────────────────────
+vote_window: 5              # number of recent frames to consider
+required_votes: 4           # frames that must agree to confirm detection
+
+# ── Silence / arming ──────────────────────────────────────────
+energy_threshold: 0.01      # overridden at runtime by calibrate_noise_floor()
+silence_frames_needed: 3    # consecutive silent frames before re-arming
+
+# ── Cooldown ──────────────────────────────────────────────────
+cooldown_seconds: 3.0       # minimum seconds between confirmed detections
+
+# # ── Command recording ─────────────────────────────────────────
+# max_command_duration: 5.0   # hard cap — stop recording after this many seconds
+# min_command_duration: 0.5   # don't check for silence before this many seconds
+# command_silence_frames: 4   # consecutive silent frames = user finished speaking
+
+# ── Command recording ─────────────────────────────────────────
+command_duration: 3         # seconds of audio captured for Whisper after wake word
+# ── Whisper ───────────────────────────────────────────────────
 whisper_model: base.en
 
-# Command extraction
+# ── Command extraction ────────────────────────────────────────
 rooms:
   - kitchen
   - bedroom
@@ -34,7 +56,7 @@ actions:
   - down
   - left
   - right
-  - backawrd
+  - backward
   - forward
   - "first position"
   - "second position"
