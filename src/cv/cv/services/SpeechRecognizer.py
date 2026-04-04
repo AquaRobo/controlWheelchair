@@ -1,4 +1,3 @@
-
 import time
 import numpy as np
 import sounddevice as sd
@@ -72,7 +71,6 @@ class SpeechRecognizer:
         # ── Command buffer (separate fixed-duration buffer for commands) ───
         self.command_duration = config.get("command_duration", 3)
         self.command_buffer   = AudioBuffer(self.sample_rate, self.command_duration)
-
 
 
         # ── Audio processor ───────────────────────────────────────────────
@@ -155,7 +153,7 @@ class SpeechRecognizer:
 
     def calibrate_noise_floor(self, seconds: float = 3.0):
         """
-        Listen silently for seconds and auto-set energy_threshold
+        Listen silently for `seconds` and auto-set energy_threshold
         to 4× the measured noise floor. Call once at startup.
         """
         print(f"Calibrating noise floor for {seconds}s — stay quiet...")
@@ -263,7 +261,7 @@ class SpeechRecognizer:
 
             # ══ All gates passed ══════════════════════════════════════════
             # print(
-            #     f"\n CONFIRMED: {detected_label} "
+            #     f"\nCONFIRMED: {detected_label} "
             #     f"| avg_conf={avg_conf:.3f} "
             #     f"| avg_margin={avg_margin:.3f}"
             # )
