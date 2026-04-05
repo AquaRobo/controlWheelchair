@@ -28,7 +28,8 @@ def launch_setup(context, *args, **kwargs):
 
     robot_desc_dir = get_package_share_directory('my_robot_description')
     xacro_file = os.path.join(robot_desc_dir, 'urdf', 'arm_urdf.xacro')
-    urdf_file = os.path.join(robot_desc_dir, 'urdf', 'arm_moveo_urdf.urdf')
+    
+    urdf_expanded = os.path.join(robot_desc_dir, 'urdf', 'arm_urdf_expanded.urdf')
 
     urdf_doc = xacro.process_file(
         xacro_file,
@@ -40,7 +41,7 @@ def launch_setup(context, *args, **kwargs):
 
     robot_description_content = urdf_doc.toxml()
 
-    with open(urdf_file, 'w') as f:
+    with open(urdf_expanded, 'w') as f:
         f.write(robot_description_content)
 
     robot_state_publisher_node = Node(
@@ -60,7 +61,7 @@ def launch_setup(context, *args, **kwargs):
         spawn_entity = Node(
             package='ros_gz_sim',
             executable='create',
-            arguments=['-file', urdf_file, '-name', model_name,
+            arguments=['-file', urdf_expanded, '-name', model_name,
                        '-x', '0', '-y', '0', '-z', '0.1'],
             output='screen'
         )
@@ -108,35 +109,25 @@ def generate_launch_description():
 
 
 
-    # RGB bridge
-    rgb_bridge = TimerAction(
-        period=6.0,  # wait 6 seconds before starting
+    # LSM36156 left eye bridge
+    left_bridge = TimerAction(
+        period=6.0,
         actions=[Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
-            arguments=['/camera/image_raw/image@sensor_msgs/msg/Image[gz.msgs.Image]'],
+            arguments=['/lsm36156/left/image_raw@sensor_msgs/msg/Image@gz.msgs.Image'],
             output='screen',
             condition=IfCondition(use_camera)
         )]
     )
 
-    depth_bridge = TimerAction(
-    period=6.0,
-    actions=[Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=['/camera/image_raw/depth_image@sensor_msgs/msg/Image[gz.msgs.Image]'],
-        output='screen',
-        condition=IfCondition(use_camera)
-    )]
-    )
-
-    camera_info_bridge = TimerAction(
+    # LSM36156 right eye bridge
+    right_bridge = TimerAction(
         period=6.0,
         actions=[Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
-            arguments=['/camera/image_raw/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo]'],
+            arguments=['/lsm36156/right/image_raw@sensor_msgs/msg/Image@gz.msgs.Image'],
             output='screen',
             condition=IfCondition(use_camera)
         )]
@@ -200,9 +191,8 @@ def generate_launch_description():
 
         OpaqueFunction(function=launch_setup),
 
-        rgb_bridge,
-        depth_bridge,
-        camera_info_bridge,
+        left_bridge,
+        right_bridge,
 
 
         clock_bridge,

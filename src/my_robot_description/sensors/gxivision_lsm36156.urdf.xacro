@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gxivision LSM36156 Dual-Lens Stereo Camera
+    Board: 36mm (H) x 156mm (W)
+    Baseline: 120mm (fixed)
+    Sensor: 2x Sony IMX307 @ 2MP
+    Max Resolution: 3840x1080 (side-by-side), each eye: 1920x1080
+    Frame rate: 30 fps (MJPG)
+    Interface: USB 2.0 (UVC)
+  -->
+
+  <xacro:macro name="gxivision_lsm36156" params="parent xyz rpy">
+
+    <!-- Board dimensions (meters) -->
+    <xacro:property name="cam_width"   value="0.156"/>   <!-- 156 mm -->
+    <xacro:property name="cam_height"  value="0.036"/>   <!-- 36  mm -->
+    <xacro:property name="cam_depth"   value="0.018"/>   <!-- estimated PCB thickness ~18 mm -->
+    <xacro:property name="baseline"    value="0.120"/>   <!-- 120 mm between lenses -->
+    <xacro:property name="M_PI"        value="3.1415926535897931"/>
+
+    <!-- ═══════════════════════════════════════════════
+         Board (main) link – centred between the lenses
+    ═══════════════════════════════════════════════ -->
+    <joint name="lsm36156_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child  link="lsm36156_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <link name="lsm36156_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${cam_depth} ${cam_width} ${cam_height}"/>
+        </geometry>
+        <material name="dark_grey">
+          <color rgba="0.2 0.2 0.2 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${cam_depth} ${cam_width} ${cam_height}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <!-- Estimated mass ~40 g for a PCB of this size -->
+        <mass value="0.040"/>
+        <origin xyz="0 0 0"/>
+        <inertia
+          ixx="${(1.0/12.0)*0.040*(cam_height*cam_height + cam_depth*cam_depth)}"
+          ixy="0" ixz="0"
+          iyy="${(1.0/12.0)*0.040*(cam_width*cam_width + cam_depth*cam_depth)}"
+          iyz="0"
+          izz="${(1.0/12.0)*0.040*(cam_width*cam_width + cam_height*cam_height)}"/>
+      </inertial>
+    </link>
+
+    <!-- ═══════════════════════════════════════════════
+         LEFT lens (optical) frame
+         Offset: -baseline/2 along Y (camera-lateral axis)
+    ═══════════════════════════════════════════════ -->
+    <joint name="lsm36156_left_joint" type="fixed">
+      <parent link="lsm36156_link"/>
+      <child  link="lsm36156_left_frame"/>
+      <origin xyz="0.01 ${-baseline/2} 0" rpy="0 0 0"/>
+    </joint>
+    <link name="lsm36156_left_frame"/>
+
+    <joint name="lsm36156_left_optical_joint" type="fixed">
+      <parent link="lsm36156_left_frame"/>
+      <child  link="lsm36156_left_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
+    </joint>
+    <link name="lsm36156_left_optical_frame"/>
+
+    <!-- ═══════════════════════════════════════════════
+         RIGHT lens (optical) frame
+         Offset: +baseline/2 along Y
+    ═══════════════════════════════════════════════ -->
+    <joint name="lsm36156_right_joint" type="fixed">
+      <parent link="lsm36156_link"/>
+      <child  link="lsm36156_right_frame"/>
+      <origin xyz="0.01 ${baseline/2} 0" rpy="0 0 0"/>
+    </joint>
+    <link name="lsm36156_right_frame"/>
+
+    <joint name="lsm36156_right_optical_joint" type="fixed">
+      <parent link="lsm36156_right_frame"/>
+      <child  link="lsm36156_right_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
+    </joint>
+    <link name="lsm36156_right_optical_frame"/>
+
+    <!-- ═══════════════════════════════════════════════
+         Gazebo plugins – one camera sensor per eye
+    ═══════════════════════════════════════════════ -->
+
+    <!-- Left eye -->
+    <gazebo reference="lsm36156_left_frame">
+      <sensor name="lsm36156_left" type="camera">
+        <camera>
+          <!-- 2.3 mm lens @ 1/2.9" sensor → ~90° HFOV -->
+          <horizontal_fov>1.5708</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>15</update_rate>
+        <visualize>true</visualize>
+        <gz_frame_id>lsm36156_left_optical_frame</gz_frame_id>
+        <topic>lsm36156/left/image_raw</topic>
+      </sensor>
+    </gazebo>
+
+    <!-- Right eye -->
+    <gazebo reference="lsm36156_right_frame">
+      <sensor name="lsm36156_right" type="camera">
+        <camera>
+          <horizontal_fov>1.5708</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>15</update_rate>
+        <visualize>true</visualize>
+        <gz_frame_id>lsm36156_right_optical_frame</gz_frame_id>
+        <topic>lsm36156/right/image_raw</topic>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+</robot>
