@@ -46,6 +46,27 @@
   </group>
 
 
+  <!-- ArmPoseNode -->
+  <group if="$(var use_sim)">
+    <node pkg="control" exec="arm_pose_node" name="arm_pose_node" output="screen">
+      <param name="use_sim_time" value="true"/>
+    </node>
+  </group>
+  <group unless="$(var use_sim)">
+    <node pkg="control" exec="arm_pose_node" name="arm_pose_node" output="screen"/>
+  </group>
+
+  <!-- CameraPoseNode -->
+  <group if="$(var use_sim)">
+    <node pkg="control" exec="camera_pose_node" name="camera_pose_node" output="screen">
+      <param name="use_sim_time" value="true"/>
+    </node>
+  </group>
+  <group unless="$(var use_sim)">
+    <node pkg="control" exec="camera_pose_node" name="camera_pose_node" output="screen"/>
+  </group>
+
+  <!-- Speech Recognizer -->
   <group if="$(var use_sim)">
     <node pkg="cv" exec="speech_recognizer_node" name="speech_recognizer_node" output="screen">
       <param name="use_sim_time" value="true"/>

@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 from builtin_interfaces.msg import Duration
@@ -49,6 +50,14 @@ class ArmPoseNode(Node):
         self.command_sub_ = self.create_subscription(String, '/commanded_action', self.command_callback, 10)
         self.joint_state_sub_ = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
 
+        self.camera_target_sub_ = self.create_subscription(
+            PointStamped,
+            '/base_link/object_position',
+            self.camera_target_callback,
+            10
+        )
+        self.dynamic_target = None
+
         self.joint_names = ['Joint_1','Joint_2','Joint_3','Joint_4','Joint_5','Joint_6']
         self.current_joints = [0.0]*6
         self.joint_states_received = False
@@ -63,7 +72,7 @@ class ArmPoseNode(Node):
 
         self.get_logger().info(
             "Commander ready. Commands: up, down, left, right, forward, back, "
-            "grab [can|cylinder|mustard], hand_up, hand_down, tilt_right, tilt_left, "
+            "grab [can|cylinder|mustard], water, hand_up, hand_down, tilt_right, tilt_left, "
             "first position, second position, open, close, exit"
         )
 
@@ -82,6 +91,17 @@ class ArmPoseNode(Node):
         return False
 
     # ----------------- Subscribers -----------------
+    def camera_target_callback(self, msg: PointStamped):
+        self.dynamic_target = {
+            "x": msg.point.x,
+            "y": msg.point.y,
+            "z": msg.point.z,
+            "roll": GRASP_ROLL,
+            "pitch": GRASP_PITCH,
+            "yaw": GRASP_YAW
+        }
+        self.get_logger().info(f"Target Updated from Camera -> X:{msg.point.x:.3f}, Y:{msg.point.y:.3f}, Z:{msg.point.z:.3f}")
+
     def joint_state_callback(self, msg: JointState):
         joint_dict = dict(zip(msg.name, msg.position))
         all_found = True
@@ -102,6 +122,12 @@ class ArmPoseNode(Node):
         
         if command in ["grab", "grab default"]:
             self.grab_sequence("default")
+        elif command == "water":
+            if self.dynamic_target is not None:
+                self.get_logger().info("Moving to dynamic 'water' target detected by camera...")
+                self.move_to_pose(self.dynamic_target)
+            else:
+                self.get_logger().warn("Camera target ('water') is unknown! Wait for /base_link/object_position.")
         elif command in ["first position", "pos1"]:
             self.move_to_pose(self.pos1)
         elif command in ["second position", "pos2"]:
