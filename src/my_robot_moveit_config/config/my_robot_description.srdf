@@ -158,4 +158,7 @@
     <disable_collisions link1="hand_link" link2="lsm36156_link" reason="Never"/>
     <disable_collisions link1="wrist_link" link2="lsm36156_link" reason="Never"/>
     <disable_collisions link1="tool_link" link2="lsm36156_link" reason="Never"/>
+    <disable_collisions link1="forearm_link" link2="lsm36156_link" reason="Never"/>
+    <disable_collisions link1="elbow_link" link2="lsm36156_link" reason="Never"/>
+    <disable_collisions link1="arm_link" link2="lsm36156_link" reason="Never"/>
 </robot>

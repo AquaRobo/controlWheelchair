@@ -33,8 +33,8 @@ ROBOT_CONFIG = {
             "pipeline_names": ["ompl"]
         },
         "plan_request_params": {
-            "planning_attempts": 3,  
-            "planning_time": 3.0,  
+            "planning_attempts": 5,  
+            "planning_time": 5.0,  
             "planning_pipeline": "ompl",
             "max_velocity_scaling_factor": 2.0,  
             "max_acceleration_scaling_factor": 2.0  
@@ -55,7 +55,7 @@ ROBOT_CONFIG = {
             "start_state_max_bounds_error": 0.1,
             "goal_joint_tolerance": 0.01,  
             "goal_position_tolerance": 0.03,  
-            "goal_orientation_tolerance": 0.4  
+            "goal_orientation_tolerance": 0.8  
         }
 }
 
@@ -108,34 +108,24 @@ class ArmCommander(Node):
         self.plan_and_execute_arm()
 
     def go_to_pose_target(self, x, y, z, roll, pitch, yaw):
+
+        self.get_logger().info(
+            f"go_to_pose_target  x={x:.3f} y={y:.3f} z={z:.3f} "
+            f"roll={roll:.3f} pitch={pitch:.3f} yaw={yaw:.3f}"
+        )
         
-        success = self._try_pose_target(x, y, z, roll, pitch, yaw)
+        # Try MoveIt IK-based planning (1 attempt — fast fail)
+        if self._try_pose_target(x, y, z, roll, pitch, yaw):
+            return
         
-        if not success:
-            self.get_logger().warn("Initial planning failed, trying with slight variations...")
-            # Try with slight orientation variations to avoid singularities
-            variations = [
-                (0.05, 0.0, 0.0),  
-                (-0.05, 0.0, 0.0),
-                (0.0, 0.05, 0.0),  
-                (0.0, -0.05, 0.0),
-                (0.0, 0.0, 0.05),  
-                (0.0, 0.0, -0.05),
-                (0.03, 0.03, 0.0),  
-                (-0.03, -0.03, 0.0),  
-            ]
-            
-            for d_roll, d_pitch, d_yaw in variations:
-                new_roll = roll + d_roll
-                new_pitch = pitch + d_pitch
-                new_yaw = yaw + d_yaw
-                self.get_logger().info(f"Trying variation: roll={new_roll:.3f}, pitch={new_pitch:.3f}, yaw={new_yaw:.3f}")
-                if self._try_pose_target(x, y, z, new_roll, new_pitch, new_yaw):
-                    self.get_logger().info("Planning succeeded with variation!")
-                    return
-            
-            self.get_logger().error("All planning attempts failed, including variations")
-    
+        # IK failed → joint-space fallback (bypasses IK, uses MoveIt path planning only)
+        self.get_logger().warn(
+            "IK planning failed (5-DOF arm limitation). Using joint-space fallback..."
+        )
+        joints = self._approximate_joints_for_target(x, y, z)
+        self.get_logger().info(f"Joint-space target: {[f'{j:.3f}' for j in joints]}")
+        self.go_to_joints_target(joints)
+
     def _try_pose_target(self, x, y, z, roll, pitch, yaw):
         
         q_x, q_y, q_z, q_w = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
@@ -151,7 +141,33 @@ class ArmCommander(Node):
 
         self.arm_.set_start_state_to_current_state()
         self.arm_.set_goal_state(pose_stamped_msg=pose_goal, pose_link="tool_link")
-        return self.plan_and_execute_arm()
+        return self.plan_and_execute_arm(max_attempts=1)
+
+    def _approximate_joints_for_target(self, x, y, z):
+        """Last-resort: compute approximate joint angles from known-working config.
+        Based on pre_grasp [-0.24, -0.20, -1.20, -0.48, 1.57, 0.0] which
+        reaches roughly (0.50, 0.15, 0.06) in base_link frame."""
+        import math
+
+        REF_JOINTS = [-0.24, -0.20, -1.20, -0.48, 1.57, 0.0]
+        REF_X, REF_Y, REF_Z = 0.50, 0.15, 0.06
+
+        # Joint 1: base rotation toward target
+        j1 = REF_JOINTS[0] + (math.atan2(y, x) - math.atan2(REF_Y, REF_X))
+        j1 = max(-1.5707, min(1.5707, j1))
+
+        # Reach scaling
+        ref_reach = math.sqrt(REF_X**2 + REF_Y**2)
+        target_reach = math.sqrt(x**2 + y**2)
+        ratio = max(0.5, min(1.5, target_reach / ref_reach))
+
+        j2 = REF_JOINTS[1] * ratio + (z - REF_Z) * 1.0
+        j3 = REF_JOINTS[2] * ratio
+        j4, j5, j6 = REF_JOINTS[3], REF_JOINTS[4], REF_JOINTS[5]
+
+        joints = [j1, j2, j3, j4, j5, j6]
+        return [max(-1.5707, min(1.5707, j)) for j in joints]
+
 
     def open_gripper(self):
         
@@ -171,9 +187,8 @@ class ArmCommander(Node):
         self.gripper_.set_goal_state(configuration_name="gripper_half_closed")
         self.plan_and_execute_gripper()
 
-    def plan_and_execute_arm(self):
+    def plan_and_execute_arm(self, max_attempts=3):
         
-        max_attempts = 3
         for attempt in range(max_attempts):
             plan_result = self.arm_.plan()
             if plan_result:

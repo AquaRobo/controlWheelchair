@@ -22,6 +22,11 @@ GRAB_TARGETS = {
 # Grasp orientation: end-effector pointing downward
 GRASP_ROLL, GRASP_PITCH, GRASP_YAW = 0.0, 1.57, 0.0
 
+# Minimum reachable z (metres) — prevents planning failures at surface level
+Z_MIN = 0.12
+# Small offset added so the arm approaches slightly above the object
+Z_PRE_GRASP_OFFSET = 0.04
+
 
 GRAB_JOINTS = {
     "red_cylinder": {
@@ -100,7 +105,7 @@ class ArmPoseNode(Node):
             "pitch": GRASP_PITCH,
             "yaw": GRASP_YAW
         }
-        self.get_logger().info(f"Target Updated from Camera -> X:{msg.point.x:.3f}, Y:{msg.point.y:.3f}, Z:{msg.point.z:.3f}")
+       
 
     def joint_state_callback(self, msg: JointState):
         joint_dict = dict(zip(msg.name, msg.position))
