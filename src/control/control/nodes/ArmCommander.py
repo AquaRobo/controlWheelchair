@@ -36,8 +36,8 @@ ROBOT_CONFIG = {
             "planning_attempts": 5,  
             "planning_time": 5.0,  
             "planning_pipeline": "ompl",
-            "max_velocity_scaling_factor": 2.0,  
-            "max_acceleration_scaling_factor": 2.0  
+            "max_velocity_scaling_factor": 1.0,  
+            "max_acceleration_scaling_factor": 1.0  
         },
         "trajectory_execution": {
             "allowed_start_tolerance": 0.0,  
