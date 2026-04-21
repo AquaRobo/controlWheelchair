@@ -4,13 +4,20 @@ import torchaudio
 
 class AudioProcessor:
     def __init__(self,
-                 target_sample_rate: int = 16000,
-                 duration: float         = 2.0,
-                 device: str             = "cpu"):
+                 input_sample_rate:  int   = 16000,
+                 target_sample_rate: int   = 16000,
+                 duration:           float = 2.0,
+                 device:             str   = "cpu"):
 
+        self.input_sample_rate  = input_sample_rate
         self.target_sample_rate = target_sample_rate
         self.duration           = duration
         self.device             = device
+
+        self.resampler = torchaudio.transforms.Resample(
+            orig_freq=input_sample_rate,
+            new_freq=target_sample_rate
+        ).to(device)
 
         self.transformation = torch.nn.Sequential(
             torchaudio.transforms.MelSpectrogram(
@@ -20,10 +27,14 @@ class AudioProcessor:
                 n_mels=64
             ),
             torchaudio.transforms.AmplitudeToDB()
-        ).to(device)   # keep the transform on the same device as the model
+        ).to(device)
 
     def preprocess(self, audio) -> torch.Tensor:
         signal = torch.tensor(audio, dtype=torch.float32).unsqueeze(0).to(self.device)
+
+        # Resample if input and target rates differ
+        if self.input_sample_rate != self.target_sample_rate:
+            signal = self.resampler(signal)
 
         # Normalize
         peak = signal.abs().max()

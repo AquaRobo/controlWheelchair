@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import sounddevice as sd
-import torch
+import torch, torchaudio
 from faster_whisper import WhisperModel
 from collections import deque
 
@@ -62,8 +62,9 @@ class SpeechRecognizer:
             "cuda" if torch.cuda.is_available() else "cpu"
         )
 
-        self.sample_rate = config.get("sample_rate", 16000)
-        self.duration    = config.get("listen_duration", 2)
+        self.sample_rate        = config.get("sample_rate", 16000)
+        self.target_sample_rate = config.get("target_sample_rate", 16000)
+        self.duration           = config.get("listen_duration", 2)
 
         # ── Wake word buffer (sliding deque — never manually cleared) ─────
         self.audio_buffer = AudioBuffer(self.sample_rate, self.duration)
@@ -74,7 +75,8 @@ class SpeechRecognizer:
 
         # ── Audio processor ───────────────────────────────────────────────
         self.audio_processor = AudioProcessor(
-            target_sample_rate=self.sample_rate,
+            input_sample_rate=self.sample_rate,
+            target_sample_rate=self.target_sample_rate,
             duration=self.duration,
             device=self.device
         )
@@ -110,16 +112,25 @@ class SpeechRecognizer:
         self.obj    = None
         self.action = None
 
+
+        # ── Command resampler (for Whisper input) ─────────────────────────────
+        self.command_resampler = torchaudio.transforms.Resample(
+            orig_freq=self.sample_rate,
+            new_freq=self.target_sample_rate
+        )  # keep on CPU — Whisper runs on CPU
         self._loadWakeWordModel()
         self._loadWhisperModel()
 
         self.stream = sd.InputStream(
+            device=10,
             samplerate=self.sample_rate,
             channels=1,
             dtype="float32",
             callback=self._audio_callback,
         )
         self.stream.start()
+
+
 
     # =========================================================
     # SETUP
@@ -244,20 +255,24 @@ class SpeechRecognizer:
     # =========================================================
     # COMMAND RECORDING
     # =========================================================
-
-    def _record_command(self) -> np.ndarray:
+    def _record_command(self) -> np.ndarray:    
         print("Listening for command...")
 
         while not self.command_buffer.ready():
             time.sleep(0.05)
 
-        audio                   = self.command_buffer.get()
+        audio = self.command_buffer.get()               # np.ndarray (float32)
         self.command_buffer.clear()
         self._recording_command = False
 
-        print(f"Command captured — {len(audio) / self.sample_rate:.1f}s")
-        return audio
+        # Resample for Whisper if needed
+        if self.sample_rate != self.target_sample_rate:
+            tensor = torch.tensor(audio, dtype=torch.float32).unsqueeze(0)  # (1, T)
+            tensor = self.command_resampler(tensor)                          # (1, T')
+            audio  = tensor.squeeze(0).numpy()                               # (T',)
 
+        print(f"Command captured — {len(audio) / self.target_sample_rate:.1f}s")
+        return audio
     # =========================================================
     # WHISPER + COMMAND PARSING
     # =========================================================
