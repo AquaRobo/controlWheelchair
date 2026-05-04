@@ -1,23 +1,20 @@
 controller_manager:
   ros__parameters:
     update_rate: 100
-    use_sim_time: $(arg use_sim)
+    use_sim_time: false
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-      use_sim_time: $(arg use_sim)
 
     arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-      use_sim_time: $(arg use_sim)
 
     gripper_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-      use_sim_time: $(arg use_sim)
 
 joint_state_broadcaster:
   ros__parameters:
-    use_sim_time: $(arg use_sim)
+    use_sim_time: false
 
 arm_controller:
   ros__parameters:
@@ -37,7 +34,7 @@ arm_controller:
     allow_integration_in_goal_trajectories: true
     constraints:
       goal_time: 2.0
-    use_sim_time: $(arg use_sim)
+    use_sim_time: false
 
 gripper_controller:
   ros__parameters:
@@ -51,4 +48,4 @@ gripper_controller:
     allow_nonzero_velocity_at_trajectory_end: true
     constraints:
       goal_time: 1.0
-    use_sim_time: $(arg use_sim)
+    use_sim_time: false

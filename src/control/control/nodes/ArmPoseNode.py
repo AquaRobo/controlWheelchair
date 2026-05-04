@@ -77,7 +77,7 @@ class ArmPoseNode(Node):
 
         self.get_logger().info(
             "Commander ready. Commands: up, down, left, right, forward, back, "
-            "grab [can|cylinder|mustard], water, hand_up, hand_down, tilt_right, tilt_left, "
+            "grab [can|cylinder|mustard], water, hand up, hand down, tilt right, tilt left, "
             "first position, second position, open, close, exit"
         )
 
@@ -159,6 +159,8 @@ class ArmPoseNode(Node):
 
     # ----------------- Joint publishing -----------------
     def publish_joints(self, positions, duration=0.3):
+        positions = list(positions)
+        positions[5] = 0.0  # 5-DOF arm: Joint_6 is always zero on real hardware
         msg = JointTrajectory()
         msg.joint_names = self.joint_names
         point = JointTrajectoryPoint()

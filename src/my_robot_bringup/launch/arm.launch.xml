@@ -7,11 +7,6 @@
 
   
   <group unless="$(var use_sim)">
-    <node pkg="robot_state_publisher" exec="robot_state_publisher">
-      <param name="robot_description" value="$(command 'xacro $(var urdf_path)')"/>
-    </node>
-
-    
     <node pkg="controller_manager" exec="ros2_control_node">
       <param from="$(find-pkg-share my_robot_bringup)/config/arm_controllers.yaml"/>
     </node>

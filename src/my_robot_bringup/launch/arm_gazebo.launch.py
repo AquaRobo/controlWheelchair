@@ -144,7 +144,7 @@ def generate_launch_description():
     
     # Bringup (controllers + MoveIt)
     my_robot_launch = TimerAction(
-        period=4.0 if use_sim else 0.0,
+        period=4.0,
         actions=[
             IncludeLaunchDescription(
                 AnyLaunchDescriptionSource(

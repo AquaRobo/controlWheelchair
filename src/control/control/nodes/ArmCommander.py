@@ -14,6 +14,7 @@ from example_interfaces.msg import Float64MultiArray
 from my_robot_interfaces.msg import PoseCommand
 
 
+
 ROBOT_CONFIG = MoveItConfigsBuilder(robot_name="my_robot", package_name="my_robot_moveit_config")\
                                     .robot_description_semantic("config/my_robot_description.srdf", {"name": "my_robot"})\
                                     .to_dict()
@@ -79,6 +80,32 @@ class ArmCommander(Node):
 
         self.get_logger().info("Commander node initialized")
         self.get_logger().info("Using MoveIt for both arm and gripper planning")
+        self.get_logger().info("5-DOF mode: Joint_6 will be zeroed in every planned trajectory")
+
+    def _zero_joint6_in_trajectory(self, robot_trajectory):
+        """Post-process a planned trajectory to force Joint_6=0 in every waypoint.
+        This lets IK plan freely (finding valid solutions), while guaranteeing
+        the real 5-DOF hardware never receives a non-zero Joint_6 command."""
+        try:
+            jt = robot_trajectory.joint_trajectory
+            if "Joint_6" not in jt.joint_names:
+                return
+            idx = jt.joint_names.index("Joint_6")
+            for pt in jt.points:
+                positions = list(pt.positions)
+                positions[idx] = 0.0
+                pt.positions = tuple(positions)
+                # Also zero velocity/acceleration for Joint_6 so the trajectory is consistent
+                if pt.velocities:
+                    vels = list(pt.velocities)
+                    vels[idx] = 0.0
+                    pt.velocities = tuple(vels)
+                if pt.accelerations:
+                    accs = list(pt.accelerations)
+                    accs[idx] = 0.0
+                    pt.accelerations = tuple(accs)
+        except Exception as e:
+            self.get_logger().warn(f"Could not zero Joint_6 in trajectory: {e}")
 
     def go_to_named_target(self, name):
         """Move to a named configuration from SRDF"""
@@ -91,6 +118,10 @@ class ArmCommander(Node):
         if len(joints) != 6:
             self.get_logger().error(f"Expected 5 joints, got {len(joints)}")
             return
+
+        joints = list(joints)
+        joints[5] = 0.0  # 5-DOF arm: Joint_6 is always zero
+
         
         robot_state = RobotState(self.robot_.get_robot_model())
         joint_values = {
@@ -193,6 +224,7 @@ class ArmCommander(Node):
             plan_result = self.arm_.plan()
             if plan_result:
                 self.get_logger().info(f"Arm planning successful (attempt {attempt + 1}), executing...")
+                self._zero_joint6_in_trajectory(plan_result.trajectory)
                 try:
                     self.robot_.execute(plan_result.trajectory, controllers=["arm_controller"])
                     return True

@@ -1,8 +1,8 @@
 import time
+import threading
 import numpy as np
 import sounddevice as sd
 import whisper
-import librosa
 import torch
 
 from cv.helper.AudioBuffer import AudioBuffer
@@ -21,11 +21,7 @@ class SpeechRecognizer:
         self.sample_rate = config.get("sample_rate", 16000)
         self.duration = config.get("listen_duration", 3)
 
-
-        self.audio_buffer = AudioBuffer(
-            self.sample_rate,
-            self.duration
-        )
+        self.audio_buffer = AudioBuffer(self.sample_rate, self.duration)
 
         self.stream = sd.InputStream(
             samplerate=self.sample_rate,
@@ -34,82 +30,30 @@ class SpeechRecognizer:
             callback=self._audio_callback,
         )
         self.stream.start()
-        self.wake_word_threshold = config.get("wake_word_threshold", 0.5)
-        self.wake_word_model = None
 
+        self.wake_word_threshold = config.get("wake_word_threshold", 0.5)
         self.whisper_model = None
         self.whisper_model_size = config.get("whisper_model", "tiny.en")
 
-        
+        # Background Whisper state (thread-safe)
+        self._lock = threading.Lock()
+        self._whisper_running = False
+        self._last_result = (None, None, None)
 
-        # self._loadWakeWordModel()
         self._loadWhisperModel()
 
+    # ------------------------------------------------------------------
+    # Audio capture
+    # ------------------------------------------------------------------
 
-
-    def _audio_callback(self, indata, frames, time, status):
+    def _audio_callback(self, indata, frames, time_info, status):
         if status:
             return
         self.audio_buffer.add(indata[:, 0])
 
-
-
-    # def _listen(self) -> np.ndarray:
-    #     audio = sd.rec(
-    #         int(self.sample_rate * self.duration),
-    #         samplerate=self.sample_rate,
-    #         channels=1,
-    #         dtype="float32",
-    #     )
-    #     sd.wait()
-    #     return audio.flatten()
-
-    def _loadWakeWordModel(self):
-        # model = torch.load(self.model_path, map_location=self.device, weights_only=False)
-
-        # if not isinstance(model, torch.jit.ScriptModule):
-        #     model = model.to(self.device)
-
-        # model.eval()
-        # self.wake_word_model = 
-        pass
-
-    def _runWakeWordDetection(self) -> float:
-        # if self.wake_word_model is None:
-        #     return 0.0
-
-        # audio = self._listen()
-
-        # if np.max(np.abs(audio)) > 0:
-        #     audio = audio / np.max(np.abs(audio))
-
-        # mel = librosa.feature.melspectrogram(
-        #     y=audio,
-        #     sr=self.sample_rate,
-        #     n_fft=1024,
-        #     hop_length=512,
-        #     n_mels=64,
-        # )
-        # mel_db = librosa.power_to_db(mel, ref=np.max)
-        # mel_db = (mel_db - mel_db.mean()) / (mel_db.std() + 1e-6)
-
-        # x = (
-        #     torch.tensor(mel_db, dtype=torch.float32)
-        #     .unsqueeze(0)
-        #     .unsqueeze(0)
-        #     .to(self.device)
-        # )
-
-        # with torch.inference_mode():
-        #     logit = self.wake_word_model(x).item()
-        #     prob = torch.sigmoid(torch.tensor(logit, device=self.device)).item()
-
-        # return prob
-        pass
-
-
-    def _getWakeWord(self) -> bool:
-        return  True #self._runWakeWordDetection() >= self.wake_word_threshold
+    # ------------------------------------------------------------------
+    # Model loading
+    # ------------------------------------------------------------------
 
     def _loadWhisperModel(self):
         self.whisper_model = whisper.load_model(
@@ -117,17 +61,32 @@ class SpeechRecognizer:
             device=self.device,
         )
 
-    def _runWhisper(self, audio: np.ndarray) -> str:
-        if self.whisper_model is None:
-            return ""
+    # ------------------------------------------------------------------
+    # Whisper inference (background thread — never blocks ROS timer)
+    # ------------------------------------------------------------------
 
-        result = self.whisper_model.transcribe(
-            audio,
-            language="en",
-            fp16=(self.device == "cuda"),
-        )
+    def _whisper_worker(self, audio: np.ndarray):
+        try:
+            result = self.whisper_model.transcribe(
+                audio,
+                language="en",
+                fp16=(self.device == "cuda"),
+            )
+            transcription = result["text"].strip()
 
-        return result["text"].strip()
+            room   = self._getCommandedRoom(transcription)
+            obj    = self._getCommandedObject(transcription)
+            action = self._getCommandedAction(transcription)
+
+            with self._lock:
+                self._last_result = (room, obj, action)
+        finally:
+            with self._lock:
+                self._whisper_running = False
+
+    # ------------------------------------------------------------------
+    # Command extraction
+    # ------------------------------------------------------------------
 
     def _getCommandedRoom(self, transcription: str) -> str:
         for room in self.config.get("rooms", []):
@@ -146,23 +105,32 @@ class SpeechRecognizer:
             if action.lower() in transcription.lower():
                 return action
         return ""
-        
-    
+
+    # ------------------------------------------------------------------
+    # Public API — called by SpeechRecognizerNode timer (10 Hz)
+    # ------------------------------------------------------------------
+
     def recognizeSpeech(self):
+        """Non-blocking. Returns (room, obj, action) when ready, else Nones."""
 
-        if not self.audio_buffer.ready():
-            return None, None, None
-        audio = self.audio_buffer.get()
-        self.audio_buffer.clear()
+        # Kick off background Whisper when buffer is full and nothing is running
+        if self.audio_buffer.ready():
+            with self._lock:
+                if not self._whisper_running:
+                    audio = self.audio_buffer.get()
+                    self.audio_buffer.clear()
+                    self._whisper_running = True
+                    threading.Thread(
+                        target=self._whisper_worker,
+                        args=(audio,),
+                        daemon=True
+                    ).start()
 
-        transcription = self._runWhisper(audio)
+        # Return any result that arrived since the last call
+        with self._lock:
+            result = self._last_result
+            if any(result):
+                self._last_result = (None, None, None)
+                return result
 
-        room = self._getCommandedRoom(transcription)
-        obj = self._getCommandedObject(transcription)
-        action = self._getCommandedAction(transcription)
-
-        return room, obj, action
-
-    # def end_stream(self):
-    #     self.stream.stop()
-    #     self.stream.close()
+        return None, None, None

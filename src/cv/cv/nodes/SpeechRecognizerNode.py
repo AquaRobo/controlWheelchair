@@ -64,7 +64,7 @@ class SpeechRecognizerNode(Node):
 
         if action:
             msg = String()
-            msg.data = action.upper()
+            msg.data = action.lower()
             self.actions_pub.publish(msg)
             self.get_logger().info(f"Published Commanded Action: {msg.data}")
 
