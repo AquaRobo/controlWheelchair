@@ -67,6 +67,7 @@ class NavigationNode(Node):
                     self.publishOnWheels()
             else:
                 self.heading_latched = False
+                self.pid_yaw.setpoint = None
                 self.navigation.navigate(self.x_axis, self.z_axis, 0.0)
                 self.publishOnWheels()
 

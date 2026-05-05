@@ -15,6 +15,7 @@ class IMUNode(Node):
 
     def run(self):
         self.imu.update()
+        self.imu_msg.header.stamp = self.get_clock().now().to_msg()
         orientation = self.imu.getOrientation()
         angular_velocity = self.imu.getAngularVelocity()
         linear_acceleration = self.imu.getLinearAcceleration()

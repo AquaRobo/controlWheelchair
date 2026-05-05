@@ -21,16 +21,16 @@ def generate_launch_description():
     nav2_params = os.path.join(get_package_share_directory('control'),'config','nav2_params.yaml')
     
     wheelchair_bringup = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory("my_robot_bringup"), "launch"), f"/{launch_file}"]),
-                    launch_arguments={'use_lidar_sim': lidar_sim, 'use_imu_sim': imu_sim, 'use_mock_hardware': use_mock_hardware}.items()
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory("my_robot_bringup"), "launch"), f"/{launch_file}"]),
+            launch_arguments={'use_lidar_sim': lidar_sim, 'use_imu_sim': imu_sim, 'use_mock_hardware': use_mock_hardware}.items()
     )
 
     lidar_launch = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory("control"), "launch"), "/lidar.launch.py"]),
-                launch_arguments={'frame_id': 'lidar_r'}.items(),
-                condition=IfCondition(PythonExpression([f"'{lidar_sim}' == 'false'"]))
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory("control"), "launch"), "/lidar.launch.py"]),
+            launch_arguments={'frame_id': 'lidar_r'}.items(),
+            condition=IfCondition(PythonExpression([f"'{lidar_sim}' == 'false'"]))
     )
 
     lifelong_slam_launch = IncludeLaunchDescription(
@@ -64,7 +64,8 @@ def generate_launch_description():
         package="control",
         executable="imu_node",
         output="screen", 
-        parameters=[{'use_sim_time': use_sim_time}]
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(PythonExpression([f"'{imu_sim}' == 'false'"]))
     )
 
     twist_mux_node = Node(
@@ -97,8 +98,8 @@ def generate_launch_description():
         odom_node,
         imu_node,
         twist_mux_node,
-        # lifelong_slam_launch,
-        # navigation_launch,
-        # auto_nav_node,
+        lifelong_slam_launch,
+        navigation_launch,
+        auto_nav_node,
         # speach_recognizer_node,
     ])

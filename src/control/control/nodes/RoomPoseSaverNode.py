@@ -16,10 +16,10 @@ class RoomPoseSaverNode(Node):
         #Poses 
         self.x_pose = None
         self.y_pose = None
-        self.x_orientation = None
-        self.y_orientation = None
         self.z_orientation = None
         self.w_orientation = None
+        self.x_orientation = 0 # No Roll
+        self.y_orientation = 0 # No Pitch
         self.room_name = None
 
         self.create_subscription(Joy, 'joy', self._joyCallback, 10)
@@ -36,8 +36,6 @@ class RoomPoseSaverNode(Node):
     def _odomCallback(self, msg: Odometry):
         self.x_pose = msg.pose.pose.position.x
         self.y_pose = msg.pose.pose.position.y
-        self.x_orientation = msg.pose.pose.orientation.x
-        self.y_orientation = msg.pose.pose.orientation.y
         self.z_orientation = msg.pose.pose.orientation.z
         self.w_orientation = msg.pose.pose.orientation.w
 
@@ -46,27 +44,34 @@ class RoomPoseSaverNode(Node):
             self.room_name = msg.data
 
     def _savePose(self):
-        if not None in (self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation, self.room_name):
+        if not None in (self.x_pose, self.y_pose, self.z_orientation, self.w_orientation, self.room_name):
             if self.joystick.isPressed('KITCHEN_SAVE'):
                 self.pose_saver.updatePose('KITCHEN', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for KITCHEN: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
 
             if self.joystick.isPressed('LIVING_ROOM_SAVE'):
                 self.pose_saver.updatePose('LIVING_ROOM', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for LIVING_ROOM: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
 
             if self.joystick.isPressed('BEDROOM_SAVE'):
                 self.pose_saver.updatePose('BEDROOM', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for BEDROOM: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
 
             if self.joystick.isPressed('BATHROOM_SAVE'):
                 self.pose_saver.updatePose('BATHROOM', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
-                
+                self._logger.info(f"Saved pose for BATHROOM: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
+
             if self.joystick.isPressed('KIDS_ROOM_SAVE'):
                 self.pose_saver.updatePose('KIDS_ROOM', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for KIDS_ROOM: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
 
             if self.joystick.isPressed('HALLWAY_SAVE'):
                 self.pose_saver.updatePose('HALLWAY', self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for HALLWAY: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
             
             if self.joystick.isPressed('GENERAL_ROOM_SAVE'):
                 self.pose_saver.updatePose(self.room_name, self.x_pose, self.y_pose, self.x_orientation, self.y_orientation, self.z_orientation, self.w_orientation)
+                self._logger.info(f"Saved pose for {self.room_name}: x={self.x_pose}, y={self.y_pose}, orientation=({self.z_orientation}, {self.w_orientation})")
     
 def main(args=None):
     rclpy.init(args=args)
