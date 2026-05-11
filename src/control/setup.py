@@ -37,6 +37,7 @@ setup(
             'arm_commander_node = control.nodes.ArmCommander:main',
             'arm_pose_node = control.nodes.ArmPoseNode:main',
             'camera_pose_node = control.nodes.CameraPoseNode:main',
+            'steppers_node = control.nodes.ArmControl:main',
         ],
     },
 )
