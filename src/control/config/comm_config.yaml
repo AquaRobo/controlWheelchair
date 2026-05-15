@@ -1,5 +1,5 @@
 # Determine the communication protocol and its parameters
-esp_protocol: SPI # Options: I2C, SPI, CAN, UART
+esp_protocol: UART # Options: I2C, SPI, CAN, UART
 stm_protocol: SPI # Options: I2C, SPI, CAN, UART
 i2c_esp_config:
   address: 0x40

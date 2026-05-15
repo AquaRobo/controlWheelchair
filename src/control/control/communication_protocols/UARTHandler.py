@@ -27,7 +27,7 @@ class UARTHandler:
     def sendData(self, data: list) -> None:
         try:
             packet = DataStructer.to_bytes(data)
-            self.UART.write(packet)
+            self.UART.write(data)
             self.UART.flush()
         except Exception as e:
             raise CommWriteError(f"Error writing to UART device: {e}")
