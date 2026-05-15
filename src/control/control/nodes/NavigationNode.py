@@ -33,8 +33,8 @@ class NavigationNode(Node):
         self.timer = self.create_timer(0.1, self.navigate)  # Run at 10 Hz
 
     def _cmdVelCallback(self, msg: Twist) -> None:
-        self.x_axis = msg.linear.x
-        self.z_axis = -msg.angular.z
+        self.x_axis = -msg.linear.x
+        self.z_axis = msg.angular.z
 
     def _imuCallback(self, msg: Imu) -> None:
         # Extract yaw from quaternion
