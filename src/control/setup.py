@@ -40,6 +40,7 @@ setup(
             'arm_commander_node = control.nodes.ArmCommander:main',
             'arm_pose_node = control.nodes.ArmPoseNode:main',
             'imu_node = control.nodes.IMUNode:main',
+            'hoverboard_node = control.nodes.HoverBoardNode:main',
         ],
     },
 )

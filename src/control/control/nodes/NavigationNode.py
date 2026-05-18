@@ -1,5 +1,4 @@
 from control.services.Navigation import Navigation
-from control.services.MotorDriver import MotorDriver
 from control.services.MotorSpeedEvaluator import MotorSpeedEvaluator
 from control.services.PIDController import PIDController
 from utils.Configurator import Configurator
@@ -7,6 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64MultiArray
+from my_robot_interfaces.msg import MotorSpeeds
 import numpy as np
 import rclpy
 
@@ -18,18 +18,19 @@ class NavigationNode(Node):
         self._logger.info(f"PID Parameters: {self.pid_params}")
         self.pid_yaw = PIDController(self.pid_params["yaw_KP"], self.pid_params["yaw_KI"], self.pid_params["yaw_KD"], setpoint=None)
         self.speed_evaluator = MotorSpeedEvaluator()
-        self.motor_driver = MotorDriver()
-        self.navigation = Navigation(self.motor_driver, self.speed_evaluator)
+        self.navigation = Navigation(self.speed_evaluator)
 
         self.x_axis = None
         self.z_axis = None
         self.yaw = None
         self.heading_latched = False
         self.wheel_speeds_msg = Float64MultiArray()
+        self.motor_speeds_msg = MotorSpeeds()
 
         self.cmd_vel_subscription = self.create_subscription(Twist, 'cmd_vel', self._cmdVelCallback, 10)
         self.imu_sub = self.create_subscription(Imu, 'imu', self._imuCallback, 10)
         self.wheel_speeds_pub = self.create_publisher(Float64MultiArray, '/simple_velocity_controller/commands', 10)
+        self.motor_speeds_pub = self.create_publisher(MotorSpeeds, '/motor_speeds', 10)
         self.timer = self.create_timer(0.1, self.navigate)  # Run at 10 Hz
 
     def _cmdVelCallback(self, msg: Twist) -> None:
@@ -74,6 +75,10 @@ class NavigationNode(Node):
     def publishOnWheels(self):
         self.wheel_speeds_msg.data = self.navigation.getMotorsSpeed()
         self.wheel_speeds_pub.publish(self.wheel_speeds_msg)
+        right_pwm, left_pwm = self.navigation.getMotorsPWM()
+        self.motor_speeds_msg.right_motor = right_pwm
+        self.motor_speeds_msg.left_motor = left_pwm
+        self.motor_speeds_pub.publish(self.motor_speeds_msg)
 
 def main(args=None):
     rclpy.init(args=args)

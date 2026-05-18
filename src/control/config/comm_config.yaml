@@ -1,6 +1,6 @@
 # Determine the communication protocol and its parameters
 esp_protocol: SPI # Options: I2C, SPI, CAN, UART
-stm_protocol: SPI # Options: I2C, SPI, CAN, UART
+stm_protocol: UART # Options: I2C, SPI, CAN, UART
 i2c_esp_config:
   address: 0x40
   bus: 1
@@ -12,7 +12,7 @@ spi_esp_config:
   bus: 0
   device: 0
 uart_esp_config:
-  port: /dev/ttyUSB0
+  port: /dev/ttyUSB1
   baudrate: 115200
   timeout: 0.5
 i2c_stm_config:
