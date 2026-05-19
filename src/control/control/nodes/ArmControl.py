@@ -59,7 +59,7 @@ class Steppers(Node):
         )
 
         # 🔹 Communication handler (SPI → ESP)
-        self.commHandler = Dispatcher().get_communication_handler("SENSOR")
+        self.commHandler = Dispatcher().get_communication_handler("ESP")
 
         # 🔹 Timer (send every 100ms)
         self.timer = self.create_timer(0.1, self.send_steps)
