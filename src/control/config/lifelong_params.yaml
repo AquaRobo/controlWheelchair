@@ -16,7 +16,7 @@ slam_toolbox:
     base_frame: base_footprint
     scan_topic: /scan
     use_map_saver: true
-    mode: localization
+    mode: mapping
 
     # lifelong params
     lifelong_search_use_tree: false
@@ -31,8 +31,8 @@ slam_toolbox:
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    map_file_name: /home/mansour/Desktop/Wheelchair/controlWheelchair/maps/turtlebot
-    map_start_pose: [0.0, 0.0, 0.0]
+    # map_file_name: /home/mansour/Desktop/Wheelchair/controlWheelchair/maps/turtlebot
+    # map_start_pose: [0.0, 0.0, 0.0]
     #map_start_at_dock: true
 
     debug_logging: false

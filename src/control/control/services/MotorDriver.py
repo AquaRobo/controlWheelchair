@@ -15,6 +15,13 @@ class MotorDriver:
         motors_speeds = self.__buildMotorsArray(motors_dict)
         self.commHandler.sendData(motors_speeds)
 
+    def drivePwm(self, right_pwm: float, left_pwm: float) -> None:
+        right = int(right_pwm)
+        left = int(left_pwm)
+        checksum = START_FRAME ^ (right & 0xFFFF) ^ (left & 0xFFFF)
+        data = struct.pack('<HhhH', START_FRAME, right, left, checksum)
+        self.commHandler.sendData(data)
+
     def __buildMotorsArray(self, motors_dict: dict[str, Motors]) -> list:
         """Converts motor dict to list and send its speed.
         Args:

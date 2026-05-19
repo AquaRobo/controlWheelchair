@@ -91,15 +91,23 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
+    HoverBoardNode = Node(
+        package="control",
+        executable="hoverboard_node",
+        output="screen", 
+        parameters=[{'use_sim_time': use_sim_time}]
+    )
+
     return LaunchDescription([
         wheelchair_bringup,
         lidar_launch,
         navigation_node,
         odom_node,
-        imu_node,
+        # imu_node,
         twist_mux_node,
         lifelong_slam_launch,
-        navigation_launch,
-        auto_nav_node,
+        # navigation_launch,
+        # auto_nav_node,
         # speach_recognizer_node,
+        HoverBoardNode,
     ])
