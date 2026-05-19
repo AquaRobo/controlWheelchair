@@ -46,6 +46,6 @@ class MotorSpeedEvaluator:
 
         for motor in motors_dict.values():
             if motor.location == "rear":
-                motor.speed = rear_left_speed if motor.side == "left" else rear_right_speed
+                motor.target_speed = rear_left_speed if motor.side == "left" else rear_right_speed
             elif motor.location == "front":
-                motor.speed = front_left_speed if motor.side == "left" else front_right_speed
+                motor.target_speed = front_left_speed if motor.side == "left" else front_right_speed

@@ -21,13 +21,13 @@ class UARTHandler:
     def __initialize(self) -> None:
         try:
             self.UART = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
+            print(f"UART device initialized on port {self.port} with baudrate {self.baudrate}")
         except Exception as e:
             raise CommInitError(f"Error initializing UART device: {e}")
 
     def sendData(self, data: list) -> None:
         try:
-            packet = DataStructer.to_bytes(data)
-            self.UART.write(packet)
+            self.UART.write(data)
             self.UART.flush()
         except Exception as e:
             raise CommWriteError(f"Error writing to UART device: {e}")

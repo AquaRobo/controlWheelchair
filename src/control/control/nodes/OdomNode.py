@@ -20,8 +20,6 @@ class OdomNode(Node):
 
         self.rear_left_wheel_prev_pos = 0.0
         self.rear_right_wheel_prev_pos = 0.0
-        self.front_left_wheel_prev_pos = 0.0
-        self.front_right_wheel_prev_pos = 0.0
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
@@ -54,6 +52,7 @@ class OdomNode(Node):
         # guard against zero/negative dt
         if dt.nanoseconds <= 0.0:
             self._logger.warn(f"Non-positive dt: {dt}. Skipping update.")
+            return
 
         # Actualize the prev pose for the next iteration
         self.rear_left_wheel_prev_pos = msg.position[joint_names_index['lb_1_joint']]

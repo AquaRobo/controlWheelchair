@@ -26,7 +26,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/base_link.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/base_link.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -35,7 +35,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/base_link.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -49,7 +49,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_r.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_r.STL" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -58,7 +58,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_r.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_r.STL" />
       </geometry>
     </collision>
   </link>
@@ -78,7 +78,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_l.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_l.STL" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -87,7 +87,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_l.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_l.STL" />
       </geometry>
     </collision>
   </link>
@@ -107,7 +107,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_t.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_t.STL" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -116,7 +116,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lidar_t.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lidar_t.STL" />
       </geometry>
     </collision>
   </link>
@@ -136,7 +136,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lf_2.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lf_2.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -145,7 +145,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lf_2.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lf_2.STL" />
       </geometry>
     </collision>
   </link>
@@ -165,7 +165,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lf_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lf_1.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -174,7 +174,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lf_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lf_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -194,7 +194,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rf_2.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rf_2.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -203,7 +203,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rf_2.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rf_2.STL" />
       </geometry>
     </collision>
   </link>
@@ -223,7 +223,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rf_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rf_1.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -232,7 +232,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rf_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rf_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -252,7 +252,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rb_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rb_1.STL" />
       </geometry>
       <material name="">
         <color rgba="0.62745 0.62745 0.62745 1" />
@@ -261,7 +261,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/rb_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/rb_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -281,7 +281,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lb_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lb_1.STL" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -290,7 +290,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0.0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/lb_1.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/lb_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -310,7 +310,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/imu_link.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/imu_link.STL" />
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
@@ -319,7 +319,7 @@ Stephen Brawner (brawner@gmail.com)
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="file://$(find my_robot_description)/meshes/wheelchair_meshes/imu_link.STL" />
+        <mesh filename="package://my_robot_description/meshes/wheelchair_meshes/imu_link.STL" />
       </geometry>
     </collision>
   </link>

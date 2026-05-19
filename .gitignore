@@ -21,4 +21,5 @@ src/msgs/log/
 build/
 install/
 log/
-.git_backup/
+*.txt
+.git_backup

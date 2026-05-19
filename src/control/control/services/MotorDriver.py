@@ -2,28 +2,40 @@ from zope.interface import implementer
 from control.DTOs.motors import Motors
 from control.interfaces.IMotorDriver import IMotorDriver
 from utils.Dispatcher import Dispatcher
-import json
+import struct
+
+START_FRAME = 0xABCD    # uint16 start marker
 
 @implementer(IMotorDriver)
 class MotorDriver:
     def __init__(self):
-        self.commHandler = Dispatcher().get_communication_handler("ACTUATOR")
+        self.commHandler = Dispatcher().get_communication_handler("STM")
 
     def drive(self, motors_dict: dict[str, Motors]) -> None:
-        motors_json = self.__buildMotorsArray(motors_dict)
-        self.commHandler.sendData(motors_json)
+        motors_speeds = self.__buildMotorsArray(motors_dict)
+        self.commHandler.sendData(motors_speeds)
 
-    def __buildMotorsArray(self, motors_dict: dict[str, Motors]) -> json:
-        """Converts motor dict to json array to identify each motor by its index
-        and send its pwm and dir values.
+    def drivePwm(self, right_pwm: float, left_pwm: float) -> None:
+        right = int(right_pwm)
+        left = int(left_pwm)
+        checksum = START_FRAME ^ (right & 0xFFFF) ^ (left & 0xFFFF)
+        data = struct.pack('<HhhH', START_FRAME, right, left, checksum)
+        self.commHandler.sendData(data)
+
+    def __buildMotorsArray(self, motors_dict: dict[str, Motors]) -> list:
+        """Converts motor dict to list and send its speed.
         Args:
-            motors_dict (dict[str, Motors]): Dictionary of motor instances.
+            motors_dict: Dictionary holding motors objects
         Returns:
-            json: JSON array of motors with their pwm and dir values.
+            list: Motor's data formatted in a list.
         Example:
-            data = {"RIGHT_MOTORS": {pwm: 0, dir: 1}, "LEFT_MOTORS": {pwm: 0, dir: 1}}
+            data = ["w", motor.current_speed, .....for number of motors]
         """
-        control_motors_dict = {}
-        for motor_side, motor in motors_dict.items():
-            control_motors_dict[motor_side] = {"pwm": motor.current_pwm, "dir": motor.dir_bit}
-        return json.dumps(control_motors_dict)
+        data = []
+        for motor in motors_dict.values():
+            data.extend([int(motor.current_pwm)])
+        
+        checksum = START_FRAME ^ (data[-1] & 0xFFFF) ^ (data[-2] & 0xFFFF)
+        return struct.pack('<HhhH', START_FRAME, data[-1], data[-2], checksum)
+
+

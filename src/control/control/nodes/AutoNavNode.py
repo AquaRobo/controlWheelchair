@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 from rclpy.action import ActionClient
+from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import NavigateToPose
 from utils.Configurator import Configurator
@@ -12,6 +13,7 @@ class AutoNavNode(Node):
         self._logger = self.get_logger()
         self.room_poses_config = Configurator('control').fetchData(Configurator.ROOM_POSES)
         self.room_name = None
+        self._active_goal_handle = None
 
         self._client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.goal_msg = NavigateToPose.Goal()
@@ -22,43 +24,58 @@ class AutoNavNode(Node):
 
     def _roomCallback(self, msg: String):
         self.room_name = msg.data
+        # Cancel any in-flight goal so the robot heads to the new room
+        if self._active_goal_handle is not None:
+            self._active_goal_handle.cancel_goal_async()
+            self._active_goal_handle = None
 
     def _navigateToRoom(self):
-        if self.room_name is not None and self.room_name in self.room_poses_config:
-            if not self._client.wait_for_server(timeout_sec=1.0):
-                self._logger.error('NavigateToPose action server not available!')
-                return
+        if self.room_name is None or self.room_name not in self.room_poses_config:
+            return
 
-            pose_data = self.room_poses_config[self.room_name]
-            self.goal_msg.pose.header.frame_id = 'map'
-            self.goal_msg.pose.pose.position.x = pose_data['position']['x']
-            self.goal_msg.pose.pose.position.y = pose_data['position']['y']
-            self.goal_msg.pose.pose.position.z = 0.0
-            self.goal_msg.pose.pose.orientation.x = pose_data['orientation']['x']
-            self.goal_msg.pose.pose.orientation.y = pose_data['orientation']['y']
-            self.goal_msg.pose.pose.orientation.z = pose_data['orientation']['z']
-            self.goal_msg.pose.pose.orientation.w = pose_data['orientation']['w']
+        if not self._client.server_is_ready():
+            self._logger.error('NavigateToPose action server not available!')
+            return
 
-            self._logger.info(f'Sending navigation goal to {self.room_name}...')
-            send_goal_future = self._client.send_goal_async(self.goal_msg, self.__feedbackCallback)
-            send_goal_future.add_done_callback(self.__goalResponseCallback)
+        pose_data = self.room_poses_config[self.room_name]
+        self.goal_msg.pose.header.frame_id = 'map'
+        self.goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
+        self.goal_msg.pose.pose.position.x = pose_data['position']['x']
+        self.goal_msg.pose.pose.position.y = pose_data['position']['y']
+        self.goal_msg.pose.pose.position.z = 0.0
+        self.goal_msg.pose.pose.orientation.x = pose_data['orientation']['x']
+        self.goal_msg.pose.pose.orientation.y = pose_data['orientation']['y']
+        self.goal_msg.pose.pose.orientation.z = pose_data['orientation']['z']
+        self.goal_msg.pose.pose.orientation.w = pose_data['orientation']['w']
 
-            self.room_name = None
+        self._logger.info(f'Sending navigation goal to {self.room_name}...')
+        send_goal_future = self._client.send_goal_async(self.goal_msg, self.__feedbackCallback)
+        send_goal_future.add_done_callback(self.__goalResponseCallback)
+
+        self.room_name = None
 
     def __feedbackCallback(self, feedback_msg):
-        feedback = feedback_msg.feedback
+        pass
 
     def __goalResponseCallback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
+            self._logger.warn('Navigation goal was rejected by the action server.')
             return
 
+        self._active_goal_handle = goal_handle
         get_result_future = goal_handle.get_result_async()
         get_result_future.add_done_callback(self.__getResultCallback)
 
     def __getResultCallback(self, future):
-        result = future.result().result
-        self._logger.info('Navigation completed successfully.')
+        self._active_goal_handle = None
+        status = future.result().status
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self._logger.info('Navigation completed successfully.')
+        elif status == GoalStatus.STATUS_CANCELED:
+            self._logger.info('Navigation goal was cancelled.')
+        else:
+            self._logger.error(f'Navigation failed with status: {status}')
 
 def main(args=None):
     rclpy.init(args=args)
