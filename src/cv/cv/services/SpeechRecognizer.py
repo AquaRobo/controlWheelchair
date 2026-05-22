@@ -9,6 +9,7 @@ from cv.helper.AudioBuffer import AudioBuffer
 from cv.helper.WakeWordModel import WakeWordModel
 from cv.helper.AudioProcessor import AudioProcessor
 
+from typing import Generator
 
 # =====================================================
 # VOTE BUFFER
@@ -108,9 +109,6 @@ class SpeechRecognizer:
         self.whisper_model      = None
         self.whisper_model_size = config.get("whisper_model", "tiny.en")
 
-        self.room   = None
-        self.obj    = None
-        self.action = None
 
 
         # ── Command resampler (for Whisper input) ─────────────────────────────
@@ -122,7 +120,7 @@ class SpeechRecognizer:
         self._loadWhisperModel()
 
         self.stream = sd.InputStream(
-            device=10,
+            device=None,
             samplerate=self.sample_rate,
             channels=1,
             dtype="float32",
@@ -273,6 +271,7 @@ class SpeechRecognizer:
 
         print(f"Command captured — {len(audio) / self.target_sample_rate:.1f}s")
         return audio
+    
     # =========================================================
     # WHISPER + COMMAND PARSING
     # =========================================================
@@ -304,26 +303,38 @@ class SpeechRecognizer:
             if action.lower() in transcription.lower():
                 return action
         return ""
+    
 
-    def recognizeSpeech(self) -> tuple[str, str, str]:
+    def recognizeSpeech(self) -> Generator[tuple[str, str, str], None, None]:
         wake_word = self._detect_wake_word()
-        audio     = self._record_command()
 
         if wake_word == "Milo":
             print("Running Whisper for Milo...")
-            transcription = self._runWhisper(audio)
-            print(f"Transcription: {transcription}")
-            self.room   = self._getCommandedRoom(transcription)
-            self.action = self._getCommandedAction(transcription)
+            while True:
+                self.command_buffer.clear()
+                self._recording_command = True          # ← re-arm before recording
+                audio         = self._record_command()
+                transcription = self._runWhisper(audio)
+                print(f"Transcription: {transcription}")
+                room   = self._getCommandedRoom(transcription)
+                action = self._getCommandedAction(transcription)
+                yield room, None, action
+                if action == "exit command mode":
+                    break
 
         elif wake_word == "Jarvis":
             print("Running Whisper for Jarvis...")
-            transcription = self._runWhisper(audio)
-            print(f"Transcription: {transcription}")
-            self.obj    = self._getCommandedObject(transcription)
-            self.action = self._getCommandedAction(transcription)
-
-        return self.room, self.obj, self.action
+            while True:
+                self.command_buffer.clear()
+                self._recording_command = True          # ← re-arm before recording
+                audio         = self._record_command()
+                transcription = self._runWhisper(audio)
+                print(f"Transcription: {transcription}")
+                obj    = self._getCommandedObject(transcription)
+                action = self._getCommandedAction(transcription)
+                yield None, obj, action
+                if action == "exit command mode":
+                    break
 
     def end_stream(self):
         self.stream.stop()

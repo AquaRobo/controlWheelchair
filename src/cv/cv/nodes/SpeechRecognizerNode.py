@@ -42,16 +42,14 @@ class SpeechRecognizerNode(Node):
     def _detection_loop(self):
         while rclpy.ok():
             try:
-                room, obj, action = self.speech_recognizer.recognizeSpeech()
+                for room, obj, action in self.speech_recognizer.recognizeSpeech():
+                    if any([room, obj, action]):
+                        self.executor.create_task(
+                            self._publish_results(room, obj, action)
+                        )
             except Exception as e:
                 self.get_logger().error(f"SpeechRecognizer error: {e}")
                 continue
-
-            if any([room, obj, action]):
-                self.executor.create_task(
-                    self._publish_results(room, obj, action)
-                )
-
     # =========================================================
     # PUBLISH (executor thread)
     # =========================================================

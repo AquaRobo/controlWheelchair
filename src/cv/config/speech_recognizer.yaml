@@ -1,11 +1,12 @@
 # ── Audio ─────────────────────────────────────────────────────
-sample_rate: 44100
+sample_rate: 44100  # model training sample rate
 target_sample_rate: 16000     # model training sample rate
 listen_duration: 2          # wake word window — match model training duration
-buffer_size: 88200          # sample_rate × listen_duration
+buffer_size: 88200      # sample_rate × listen_duration
+
 
 # ── Device ────────────────────────────────────────────────────
-device: cuda                 # or "cuda" if GPU is available
+device: cpu                 # or "cuda" if GPU is available
 
 # ── Wake word detection ───────────────────────────────────────
 min_confidence: 0.92        # per-frame minimum softmax confidence
@@ -30,7 +31,7 @@ cooldown_seconds: 3.0       # minimum seconds between confirmed detections
 # ── Command recording ─────────────────────────────────────────
 command_duration: 3         # seconds of audio captured for Whisper after wake word
 # ── Whisper ───────────────────────────────────────────────────
-whisper_model: base.en
+whisper_model: tiny.en
 
 # ── Command extraction ────────────────────────────────────────
 rooms:
@@ -61,3 +62,4 @@ actions:
   - forward
   - "first position"
   - "second position"
+  - "exit command mode"
