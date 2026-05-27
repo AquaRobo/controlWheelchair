@@ -21,7 +21,7 @@ class SpeechRecognizerNode(Node):
         model_path = f"{model_dir}/best_wakeword_model3.pt"
 
         self.speech_recognizer = SpeechRecognizer(self.config, model_path)
-        self.speech_recognizer.calibrate_noise_floor(seconds=3.0)
+        self.speech_recognizer.calibrate_noise_floor(seconds=5.0)
 
         self.room_pub    = self.create_publisher(String, "/commanded_room",   10)
         self.object_pub  = self.create_publisher(String, "/commanded_object", 10)
