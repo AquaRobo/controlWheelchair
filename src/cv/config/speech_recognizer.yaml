@@ -11,7 +11,7 @@ device: cpu                 # or "cuda" if GPU is available
 # ── Wake word detection ───────────────────────────────────────
 min_confidence: 0.92        # per-frame minimum softmax confidence
 min_margin: 0.75            # per-frame minimum gap between top-1 and top-2
-
+  
 # ── Vote buffer ───────────────────────────────────────────────
 vote_window: 5              # number of recent frames to consider
 required_votes: 4           # frames that must agree to confirm detection
@@ -28,8 +28,12 @@ cooldown_seconds: 3.0       # minimum seconds between confirmed detections
 # min_command_duration: 0.5   # don't check for silence before this many seconds
 # command_silence_frames: 4   # consecutive silent frames = user finished speaking
 
+reverb_settle_frames: 5      # default 4 — increase for very live rooms
+reverb_rms_multiplier: 2   # default 1.5 — raise if echo lingers longer
+
+
 # ── Command recording ─────────────────────────────────────────
-command_duration: 3         # seconds of audio captured for Whisper after wake word
+command_duration: 5.0         # seconds of audio captured for Whisper after wake word
 # ── Whisper ───────────────────────────────────────────────────
 whisper_model: tiny.en
 

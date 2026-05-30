@@ -20,8 +20,18 @@ class SpeechRecognizerNode(Node):
         model_dir  = UtilityMethods.getPackageModels("cv")
         model_path = f"{model_dir}/best_wakeword_model3.pt"
 
-        self.speech_recognizer = SpeechRecognizer(self.config, model_path)
-        self.speech_recognizer.calibrate_noise_floor(seconds=5.0)
+        # ── Mic selection (terminal prompt before stream opens) ────────────
+        device_index, device_channels, device_rate = SpeechRecognizer.select_mic_device(
+            sample_rate=self.config.get("sample_rate", 44100)
+        )
+
+        self.speech_recognizer = SpeechRecognizer(
+            self.config, model_path,
+            device_index=device_index,
+            device_channels=device_channels,
+            device_rate=device_rate,
+        )
+        self.speech_recognizer.calibrate_noise_floor(seconds=10.0)
 
         self.room_pub    = self.create_publisher(String, "/commanded_room",   10)
         self.object_pub  = self.create_publisher(String, "/commanded_object", 10)
@@ -50,6 +60,7 @@ class SpeechRecognizerNode(Node):
             except Exception as e:
                 self.get_logger().error(f"SpeechRecognizer error: {e}")
                 continue
+
     # =========================================================
     # PUBLISH (executor thread)
     # =========================================================
@@ -96,8 +107,6 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        # FIX 2: guard against double shutdown — rclpy may already
-        # be shut down if the context was invalidated during spin
         try:
             rclpy.shutdown()
         except Exception:

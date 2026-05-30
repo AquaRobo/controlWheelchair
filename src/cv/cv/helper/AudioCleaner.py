@@ -9,6 +9,14 @@ Pipeline (in order):
   3. Spectral subtraction    — subtracts the estimated noise floor (estimated
                                during the first `noise_frames` of silence)
 
+Echo-room addition
+------------------
+`update_noise_adaptive()` — call this on any frame the VAD labels as silent.
+It blends the current frame's spectrum into the stored noise profile with a
+slow exponential moving average (alpha ≈ 0.05).  This lets the system track
+slow room changes (HVAC cycling on, moving to a different room) without a
+full recalibration.  It is a no-op until the initial calibration is complete.
+
 All operations stay in torch — no scipy, no numpy round-trips, runs on CPU or CUDA.
 """
 
@@ -67,6 +75,8 @@ class SpectralSubtractor:
 
     Call `update(frame)` during the calibration window (silence).
     Call `apply(frame)`  during live audio processing.
+    Call `update_adaptive(frame, alpha)` during any silent frame post-calibration
+         to slowly adapt the profile to room changes.
     `reset()` re-starts calibration (e.g. after a long pause).
     """
 
@@ -101,6 +111,26 @@ class SpectralSubtractor:
 
         if self._frame_count >= self.noise_frames:
             self._noise_profile = self._noise_accum / self._frame_count
+
+    def update_adaptive(self, waveform: torch.Tensor, ema_alpha: float = 0.05) -> None:
+        """
+        Slowly blend a new silent frame into the stored noise profile using an
+        exponential moving average.  Only active after initial calibration.
+
+        ema_alpha controls adaptation speed:
+          - 0.01 → very slow  (adapts over ~100 quiet frames ≈ 200 s at 2 s/frame)
+          - 0.05 → moderate   (adapts over ~20 quiet frames  ≈  40 s) ← default
+          - 0.10 → fast       (adapts over ~10 quiet frames  ≈  20 s)
+
+        A moderate value works well for room changes; too fast and transient
+        echoes can corrupt the profile.
+        """
+        if not self.ready:
+            return
+        mag = self._magnitude(waveform)
+        self._noise_profile = (
+            (1.0 - ema_alpha) * self._noise_profile + ema_alpha * mag
+        )
 
     @property
     def ready(self) -> bool:
@@ -177,6 +207,9 @@ class AudioCleaner:
     # Every audio frame thereafter:
     clean = cleaner.process(raw_audio_tensor)
 
+    # During any frame the VAD marks as silent (post-calibration):
+    cleaner.update_noise_adaptive(raw_audio_tensor)   # ← new for echo rooms
+
     Parameters
     ----------
     sample_rate  : mic sample rate in Hz
@@ -188,6 +221,7 @@ class AudioCleaner:
     ss_alpha     : spectral subtraction strength   (default 2.0)
     ss_beta      : spectral floor ratio            (default 0.01)
     noise_frames : silent frames needed to calibrate (default 20)
+    adaptive_ema : EMA alpha for adaptive update   (default 0.05)
     """
 
     def __init__(
@@ -201,6 +235,7 @@ class AudioCleaner:
         ss_alpha: float = 2.0,
         ss_beta: float = 0.01,
         noise_frames: int = 20,
+        adaptive_ema: float = 0.05,
     ):
         self.sample_rate  = sample_rate
         self.fundamental  = 50.0 if hum_freq == "50hz" else 60.0
@@ -208,6 +243,7 @@ class AudioCleaner:
         self.hp_order     = hp_order
         self.notch_q      = notch_q
         self.n_harmonics  = n_harmonics
+        self.adaptive_ema = adaptive_ema
 
         self.subtractor = SpectralSubtractor(
             noise_frames=noise_frames,
@@ -228,6 +264,22 @@ class AudioCleaner:
         # matches what the subtractor will see in process()
         filtered = self._deterministic_filters(silent_audio)
         self.subtractor.update(filtered)
+
+    def update_noise_adaptive(self, raw_audio: torch.Tensor) -> None:
+        """
+        Call during any frame the VAD identifies as silent (post-calibration).
+
+        Slowly updates the spectral noise profile via EMA so the cleaner
+        tracks room changes (different room, HVAC cycling, time of day)
+        without requiring a full restart.
+
+        safe to call every silent frame — the update is intentionally slow.
+        """
+        squeezed = raw_audio.dim() == 1
+        if squeezed:
+            raw_audio = raw_audio.unsqueeze(0)
+        filtered = self._deterministic_filters(raw_audio)
+        self.subtractor.update_adaptive(filtered, ema_alpha=self.adaptive_ema)
 
     def process(self, raw_audio: torch.Tensor) -> torch.Tensor:
         """
