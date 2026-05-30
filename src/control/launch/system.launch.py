@@ -56,8 +56,17 @@ def generate_launch_description():
     odom_node = Node(
         package="control",
         executable="odom_node",
-        output="screen", 
-        parameters=[{'use_sim_time': use_sim_time}]
+        output="screen",
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(PythonExpression([f"'{use_sim_time_str}' == 'true'"]))
+    )
+
+    odom_hardware_node = Node(
+        package="control",
+        executable="odom_hardware_node",
+        output="screen",
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(PythonExpression([f"'{use_sim_time_str}' == 'false'"]))
     )
 
     imu_node = Node(
@@ -103,6 +112,7 @@ def generate_launch_description():
         lidar_launch,
         navigation_node,
         odom_node,
+        odom_hardware_node,
         # imu_node,
         twist_mux_node,
         lifelong_slam_launch,

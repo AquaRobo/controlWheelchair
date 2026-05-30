@@ -12,7 +12,7 @@ spi_esp_config:
   bus: 0
   device: 0
 uart_esp_config:
-  port: /dev/ttyUSB1
+  port: /dev/ttyUSB0
   baudrate: 115200
   timeout: 0.5
 i2c_stm_config:

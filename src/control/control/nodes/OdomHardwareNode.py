@@ -1,16 +1,18 @@
 import math
 import rclpy
-from rclpy.time import Time
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import JointState
 from tf2_ros import TransformBroadcaster
 from utils.Configurator import Configurator
 from geometry_msgs.msg import TransformStamped
 from tf_transformations import quaternion_from_euler
+from my_robot_interfaces.msg import Encoders
 from control.services.OdometryEvaluator import OdometryEvaluator
 
-class OdomNode(Node):
+_RPM_TO_RAD_S = math.tau / 60.0  # 2π / 60
+
+
+class OdomHardwareNode(Node):
     def __init__(self):
         super().__init__('odom_node')
         self._logger = self.get_logger()
@@ -18,14 +20,12 @@ class OdomNode(Node):
         self.rear_wheel_radius = self.robot_config['rear_wheels_radius']
         self.rear_wheel_separation = self.robot_config['rear_wheels_separation']
 
-        self.rear_left_wheel_prev_pos = 0.0
-        self.rear_right_wheel_prev_pos = 0.0
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
-        self.joint_sub = self.create_subscription(JointState, 'joint_states', self._jointCallback, 10)
+        self.encoders_sub = self.create_subscription(Encoders, '/encoders', self._encoderCallback, 10)
 
         # Fill the Odometry message with invariant parameters
         self.odom_msg = Odometry()
@@ -42,26 +42,31 @@ class OdomNode(Node):
         self.transform_stamped.child_frame_id = "base_footprint"
 
         self.prev_time = self.get_clock().now()
-        
-    def _jointCallback(self, msg: JointState) -> None:
-        joint_names_index = {n: i for i, n in enumerate(msg.name)}
-        dp_rear_left = msg.position[joint_names_index['lb_1_joint']] - self.rear_left_wheel_prev_pos
-        dp_rear_right = msg.position[joint_names_index['rb_1_joint']] - self.rear_right_wheel_prev_pos 
-        dt = Time.from_msg(msg.header.stamp) - self.prev_time
+
+    def _encoderCallback(self, msg: Encoders) -> None:
+        now = self.get_clock().now()
+        dt = now - self.prev_time
 
         # guard against zero/negative dt
-        if dt.nanoseconds <= 0.0:
-            self._logger.warn(f"Non-positive dt: {dt}. Skipping update.")
+        if dt.nanoseconds <= 0:
+            self._logger.warn(f"Non-positive dt: {dt.nanoseconds} ns. Skipping update.")
             return
 
-        # Actualize the prev pose for the next iteration
-        self.rear_left_wheel_prev_pos = msg.position[joint_names_index['lb_1_joint']]
-        self.rear_right_wheel_prev_pos = msg.position[joint_names_index['rb_1_joint']]
-        self.prev_time = Time.from_msg(msg.header.stamp)
+        self.prev_time = now
+        dt_s = dt.nanoseconds / 1e9
 
-        fi_rear_left, fi_rear_right = OdometryEvaluator.getRotationalSpeeds(dp_rear_left, dp_rear_right, dt.nanoseconds)
-        linear_vel, angular_vel = OdometryEvaluator.getRobotVelocities(fi_rear_left, fi_rear_right, self.rear_wheel_radius, self.rear_wheel_separation)
-        d_s, d_theta = OdometryEvaluator.getPositionIncrement(dp_rear_left, dp_rear_right, self.rear_wheel_radius, self.rear_wheel_separation)
+        # Convert RPM → rad/s, then to angular displacement (rad) over dt
+        omega_left = msg.left_speed * _RPM_TO_RAD_S
+        omega_right = msg.right_speed * _RPM_TO_RAD_S
+        dp_left = omega_left * dt_s
+        dp_right = omega_right * dt_s
+
+        linear_vel, angular_vel = OdometryEvaluator.getRobotVelocities(
+            omega_left, omega_right, self.rear_wheel_radius, self.rear_wheel_separation
+        )
+        d_s, d_theta = OdometryEvaluator.getPositionIncrement(
+            dp_left, dp_right, self.rear_wheel_radius, self.rear_wheel_separation
+        )
 
         self.theta += d_theta
         self.x += d_s * math.cos(self.theta)
@@ -89,19 +94,20 @@ class OdomNode(Node):
         self.transform_stamped.transform.rotation.w = q[3]
         self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
         self.br.sendTransform(self.transform_stamped)
-        
+
 
 def main(args=None):
     rclpy.init(args=args)
-    odom_node = OdomNode()
+    odom_hardware_node = OdomHardwareNode()
     try:
-        rclpy.spin(odom_node)
+        rclpy.spin(odom_hardware_node)
     except KeyboardInterrupt:
         pass
     finally:
-        odom_node.destroy_node()
+        odom_hardware_node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

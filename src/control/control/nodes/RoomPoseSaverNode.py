@@ -76,9 +76,14 @@ class RoomPoseSaverNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     room_pose_saver_node = RoomPoseSaverNode()
-    rclpy.spin(room_pose_saver_node)
-    room_pose_saver_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(room_pose_saver_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        room_pose_saver_node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

@@ -80,9 +80,14 @@ class AutoNavNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     auto_nav_node = AutoNavNode()
-    rclpy.spin(auto_nav_node)
-    auto_nav_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(auto_nav_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        auto_nav_node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

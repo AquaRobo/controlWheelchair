@@ -55,7 +55,7 @@ class HoverBoardNode(Node):
         if len(data) < FEEDBACK_SIZE:
             return None
         fields = struct.unpack(FEEDBACK_FMT, data[:FEEDBACK_SIZE])
-        start, cmd1, cmd2, speedR, speedL, batVoltage, boardTemp, cmdLed, checksum = fields
+        start, cmd1, cmd2, speedL, speedR, batVoltage, boardTemp, cmdLed, checksum = fields
         if start != START_FRAME:
             return None
         expected = (START_FRAME ^ (cmd1 & 0xFFFF) ^ (cmd2 & 0xFFFF)
@@ -66,8 +66,8 @@ class HoverBoardNode(Node):
         return {
             'cmd1':       cmd1,
             'cmd2':       cmd2,
-            'speedR':     speedR,
-            'speedL':     -speedL,
+            'speedR':     -speedR,
+            'speedL':     speedL,
             'batVoltage': batVoltage / 100.0,
             'boardTemp':  boardTemp / 10.0,
             'cmdLed':     cmdLed,
@@ -83,7 +83,8 @@ def main(args=None):
         pass
     finally:
         hoverboard_node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

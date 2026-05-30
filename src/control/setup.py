@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'odom_node = control.nodes.OdomNode:main',
+            'odom_hardware_node = control.nodes.OdomHardwareNode:main',
             'navigation_node = control.nodes.NavigationNode:main',
             'room_pose_saver_node = control.nodes.RoomPoseSaverNode:main',
             'map_saver_node = control.nodes.MapSaverNode:main',
