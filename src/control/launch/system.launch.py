@@ -13,7 +13,8 @@ def generate_launch_description():
     use_sim_time_str = EnvParams().USE_SIM_TIME 
 
     lidar_sim = "false" if EnvParams().LIDAR == "REALTIME" else "true"
-    imu_sim = "false" if EnvParams().IMU == "REALTIME" else "true"
+    imu_value = EnvParams().IMU
+    imu_sim = "false" if imu_value in ("REALTIME", "PI") else "true"
     use_mock_hardware = "true" if EnvParams().USE_MOCK_HARDWARE == 'true' else "false"
     launch_file = "world_viz.launch.py" if EnvParams().VISUALIZATION == "ON" else "world_core.launch.py"
 
@@ -74,7 +75,7 @@ def generate_launch_description():
         executable="imu_node",
         output="screen", 
         parameters=[{'use_sim_time': use_sim_time}],
-        condition=IfCondition(PythonExpression([f"'{imu_sim}' == 'false'"]))
+        condition=IfCondition(PythonExpression([f"'{imu_value}' == 'REALTIME'"]))
     )
 
     twist_mux_node = Node(
@@ -84,6 +85,14 @@ def generate_launch_description():
         output="screen",
         parameters=[twist_mux_params, {'use_sim_time': use_sim_time}],
         remappings=[('/cmd_vel_out', '/cmd_vel')]
+    )
+
+    pi_imu_node = Node(
+        package="control",
+        executable="pi_imu_node",
+        output="screen",
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(PythonExpression([f"'{imu_value}' == 'PI'"]))
     )
 
     auto_nav_node = Node(
@@ -113,7 +122,8 @@ def generate_launch_description():
         navigation_node,
         odom_node,
         odom_hardware_node,
-        # imu_node,
+        imu_node,
+        pi_imu_node,
         twist_mux_node,
         lifelong_slam_launch,
         # navigation_launch,

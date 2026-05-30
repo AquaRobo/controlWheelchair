@@ -205,10 +205,10 @@ class ArmPoseNode(Node):
             delta[0]-=self.step
         elif command=="forward": 
             delta[1]-=self.step*0.7
-            delta[2]+=self.step*0.5
+            # delta[2]+=self.step*0.5
         elif command=="back": 
             delta[1]+=self.step*0.7
-            delta[2]-=self.step*0.5
+            # delta[2]-=self.step*0.5
         new_joints = [c+d for c,d in zip(self.current_joints, delta)]
         self.publish_joints(new_joints, duration=0.15)
 
