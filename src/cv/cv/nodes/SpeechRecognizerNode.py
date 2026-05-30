@@ -4,7 +4,6 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 from utils.Configurator import Configurator
-from utils.UtilityMethods import UtilityMethods
 from cv.services.SpeechRecognizer import SpeechRecognizer
 
 
@@ -17,21 +16,17 @@ class SpeechRecognizerNode(Node):
             Configurator.SPEECH_RECOGNIZER
         )
 
-        model_dir  = UtilityMethods.getPackageModels("cv")
-        model_path = f"{model_dir}/best_wakeword_model3.pt"
-
-        # ── Mic selection (terminal prompt before stream opens) ────────────
+        # Terminal mic-selection prompt — must run before the stream opens
         device_index, device_channels, device_rate = SpeechRecognizer.select_mic_device(
-            sample_rate=self.config.get("sample_rate", 44100)
+            preferred_rate=self.config.get("sample_rate", 16000)
         )
 
         self.speech_recognizer = SpeechRecognizer(
-            self.config, model_path,
+            self.config,
             device_index=device_index,
             device_channels=device_channels,
             device_rate=device_rate,
         )
-        self.speech_recognizer.calibrate_noise_floor(seconds=10.0)
 
         self.room_pub    = self.create_publisher(String, "/commanded_room",   10)
         self.object_pub  = self.create_publisher(String, "/commanded_object", 10)

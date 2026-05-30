@@ -1,41 +1,24 @@
 # ── Audio ─────────────────────────────────────────────────────
-sample_rate: 44100  # model training sample rate
-target_sample_rate: 16000     # model training sample rate
-listen_duration: 2          # wake word window — match model training duration
-buffer_size: 88200      # sample_rate × listen_duration
-
-
-# ── Device ────────────────────────────────────────────────────
-device: cpu                 # or "cuda" if GPU is available
+sample_rate: 16000            # sounddevice capture rate (Whisper native)
+target_sample_rate: 16000     # Whisper expects 16 kHz
 
 # ── Wake word detection ───────────────────────────────────────
-min_confidence: 0.92        # per-frame minimum softmax confidence
-min_margin: 0.75            # per-frame minimum gap between top-1 and top-2
-  
-# ── Vote buffer ───────────────────────────────────────────────
-vote_window: 5              # number of recent frames to consider
-required_votes: 4           # frames that must agree to confirm detection
+wake_duration: 2.0            # seconds per rolling listen chunk
+wake_words:
+  milo: Milo
+  jarvis: Jarvis
 
-# ── Silence / arming ──────────────────────────────────────────
-energy_threshold: 0.01      # overridden at runtime by calibrate_noise_floor()
-silence_frames_needed: 3    # consecutive silent frames before re-arming
+# ── Silence / energy gate ─────────────────────────────────────
+energy_threshold: 0.01        # chunks below this RMS are skipped
 
 # ── Cooldown ──────────────────────────────────────────────────
-cooldown_seconds: 3.0       # minimum seconds between confirmed detections
-
-# # ── Command recording ─────────────────────────────────────────
-# max_command_duration: 5.0   # hard cap — stop recording after this many seconds
-# min_command_duration: 0.5   # don't check for silence before this many seconds
-# command_silence_frames: 4   # consecutive silent frames = user finished speaking
-
-reverb_settle_frames: 5      # default 4 — increase for very live rooms
-reverb_rms_multiplier: 2   # default 1.5 — raise if echo lingers longer
-
+cooldown_seconds: 2.0         # minimum seconds between wake-word detections
 
 # ── Command recording ─────────────────────────────────────────
-command_duration: 5.0         # seconds of audio captured for Whisper after wake word
+command_duration: 3.0         # seconds of audio captured for Whisper after wake word
+
 # ── Whisper ───────────────────────────────────────────────────
-whisper_model: tiny.en
+whisper_model: tiny.en        # tiny.en is fast; use base.en for better accuracy
 
 # ── Command extraction ────────────────────────────────────────
 rooms:
