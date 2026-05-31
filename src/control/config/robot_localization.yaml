@@ -1,0 +1,120 @@
+### ekf.yaml
+### robot_localization EKF node — fuses wheel odometry + IMU
+### Docs: https://docs.ros.org/en/ros2/p/robot_localization/
+
+ekf_filter_node:
+  ros__parameters:
+
+    # ---------------------------------------------------------------
+    # Core settings
+    # ---------------------------------------------------------------
+    frequency: 50.0          # EKF update rate [Hz] — match your fastest sensor
+    sensor_timeout: 0.1      # seconds before a sensor is considered stale
+    two_d_mode: true         # ground robot: ignore z, roll, pitch entirely
+
+    # Reference frames
+    world_frame:  odom           # we're doing odom-only fusion (no GPS/map)
+    odom_frame:   odom
+    base_link_frame: base_footprint
+    map_frame:    map            # unused here but required by the param schema
+
+    # Set to true only if NO other node is broadcasting odom→base_footprint.
+    # Since your OdomHardwareNode already broadcasts it via TF, set false
+    # to avoid a duplicate/conflicting transform.
+    publish_tf: true
+
+    publish_acceleration: false
+    print_diagnostics: true
+
+    # ---------------------------------------------------------------
+    # Sensor 0 — Wheel odometry  (/odom)
+    # ---------------------------------------------------------------
+    odom0: odom
+    odom0_config: [
+    #  x,     y,     z,
+      true,  true,  false,
+    #  roll,  pitch, yaw,
+      false, false, false,
+    #  vx,    vy,    vz,
+      true,  false, false,
+    #  vroll, vpitch,vyaw,
+      false, false, true,
+    #  ax,    ay,    az
+      false, false, false,
+    ]
+    # Differential drive: vy is always 0 by constraint, not measured.
+    # Fuse x, y pose AND vx, vyaw from twist (what encoders are good at).
+    odom0_differential: false   # we publish absolute pose, not deltas
+    odom0_relative: false
+    odom0_queue_size: 10
+    odom0_nodelay: false
+
+    # ---------------------------------------------------------------
+    # Sensor 1 — IMU  (/imu)
+    # ---------------------------------------------------------------
+    imu0: /imu
+    imu0_config: [
+    #  x,     y,     z,
+      false, false, false,
+    #  roll,  pitch, yaw,
+      false, false, true,    # ← use IMU absolute yaw for heading
+    #  vx,    vy,    vz,
+      false, false, false,
+    #  vroll, vpitch,vyaw,
+      false, false, true,    # ← use IMU yaw rate for angular velocity
+    #  ax,    ay,    az
+      true,  false, false,   # ← use IMU linear accel for vx prediction
+    ]
+    imu0_differential: false    # IMU gives absolute orientation, not deltas
+    imu0_relative: true         # treat IMU yaw relative to its first reading
+                                # (matches your odom frame which starts at 0)
+    imu0_queue_size: 10
+    imu0_nodelay: false
+    imu0_remove_gravitational_acceleration: true
+
+    # ---------------------------------------------------------------
+    # Process noise covariance Q  (15×15, row-major)
+    # Order: x,y,z,roll,pitch,yaw,vx,vy,vz,vroll,vpitch,vyaw,ax,ay,az
+    # Increase a diagonal to let that state evolve faster (less smooth,
+    # more responsive). Decrease to trust the model more (smoother).
+    # ---------------------------------------------------------------
+    process_noise_covariance: [
+      0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.06,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.03,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.03,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.06,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.025, 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.025, 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.04,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01,  0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01,  0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.02,  0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01,  0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01,  0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.015,
+    ]
+
+    # ---------------------------------------------------------------
+    # Initial state estimate covariance P0  (15×15, row-major)
+    # High values = high initial uncertainty = EKF converges quickly
+    # from sensor data rather than from assumptions.
+    # ---------------------------------------------------------------
+    initial_estimate_covariance: [
+      1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,
+      0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1e-9,
+    ]

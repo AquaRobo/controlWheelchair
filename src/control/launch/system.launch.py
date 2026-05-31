@@ -20,6 +20,7 @@ def generate_launch_description():
 
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
     nav2_params = os.path.join(get_package_share_directory('control'),'config','nav2_params.yaml')
+    robot_localization_params = os.path.join(get_package_share_directory('control'),'config','robot_localization.yaml')
     
     wheelchair_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
@@ -68,6 +69,15 @@ def generate_launch_description():
         output="screen",
         parameters=[{'use_sim_time': use_sim_time}],
         condition=IfCondition(PythonExpression([f"'{use_sim_time_str}' == 'false'"]))
+    )
+
+    robot_localization_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[robot_localization_params, {'use_sim_time': use_sim_time}],
+        remappings=[('/odometry/filtered', '/odometry')]
     )
 
     imu_node = Node(
@@ -124,6 +134,7 @@ def generate_launch_description():
         odom_hardware_node,
         imu_node,
         pi_imu_node,
+        robot_localization_node,
         twist_mux_node,
         lifelong_slam_launch,
         # navigation_launch,
