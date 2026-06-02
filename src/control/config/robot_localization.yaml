@@ -8,7 +8,7 @@ ekf_filter_node:
     # ---------------------------------------------------------------
     # Core settings
     # ---------------------------------------------------------------
-    frequency: 50.0          # EKF update rate [Hz] — match your fastest sensor
+    frequency: 10.0          # EKF update rate [Hz] — match your fastest sensor
     sensor_timeout: 0.1      # seconds before a sensor is considered stale
     two_d_mode: true         # ground robot: ignore z, roll, pitch entirely
 
