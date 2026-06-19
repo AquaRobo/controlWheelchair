@@ -2,9 +2,11 @@ import math
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from tf2_ros import TransformBroadcaster
 from utils.Configurator import Configurator
-from tf_transformations import quaternion_from_euler
 from my_robot_interfaces.msg import Encoders
+from geometry_msgs.msg import TransformStamped
+from tf_transformations import quaternion_from_euler
 from control.services.OdometryEvaluator import OdometryEvaluator
 
 _RPM_TO_RAD_S = math.tau / 60.0   # 2π / 60
@@ -31,6 +33,7 @@ class OdomHardwareNode(Node):
         self.encoders_sub = self.create_subscription(
             Encoders, '/encoders', self._encoderCallback, 10
         )
+        self.publish_timer = self.create_timer(0.05, self._publishOdom)
 
         # --- Odometry message (invariant fields) ---
         self.odom_msg = Odometry()
@@ -58,6 +61,11 @@ class OdomHardwareNode(Node):
             0.0,  0.0,  0.0,  0.0,  1e9,  0.0,
             0.0,  0.0,  0.0,  0.0,  0.0,  1e-2,
         ]
+
+        self.br = TransformBroadcaster(self)
+        self.transform_stamped = TransformStamped()
+        self.transform_stamped.header.frame_id = "odom"
+        self.transform_stamped.child_frame_id = "base_footprint"
 
         self.prev_time = self.get_clock().now()
         self._logger.info("OdomHardwareNode started.")
@@ -113,7 +121,7 @@ class OdomHardwareNode(Node):
 
         q = quaternion_from_euler(0.0, 0.0, self.theta)
 
-        # --- Publish odometry ---
+        # --- Update odometry message (published by timer at 20 Hz) ---
         self.odom_msg.header.stamp             = stamp
         self.odom_msg.pose.pose.position.x     = self.x
         self.odom_msg.pose.pose.position.y     = self.y
@@ -123,7 +131,18 @@ class OdomHardwareNode(Node):
         self.odom_msg.pose.pose.orientation.w  = q[3]
         self.odom_msg.twist.twist.linear.x     = linear_vel
         self.odom_msg.twist.twist.angular.z    = angular_vel  # no negation: sign comes from getRobotVelocities
+
+        self.transform_stamped.transform.translation.x = self.x
+        self.transform_stamped.transform.translation.y = self.y
+        self.transform_stamped.transform.rotation.x = q[0]
+        self.transform_stamped.transform.rotation.y = q[1]
+        self.transform_stamped.transform.rotation.z = q[2]
+        self.transform_stamped.transform.rotation.w = q[3]
+        self.transform_stamped.header.stamp = stamp
+
+    def _publishOdom(self) -> None:
         self.odom_pub.publish(self.odom_msg)
+        self.br.sendTransform(self.transform_stamped)
 
 def main(args=None):
     rclpy.init(args=args)

@@ -26,6 +26,7 @@ class OdomNode(Node):
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.joint_sub = self.create_subscription(JointState, 'joint_states', self._jointCallback, 10)
+        self.publish_timer = self.create_timer(0.05, self._publishOdom)  # Publish at 20 Hz
 
         # Fill the Odometry message with invariant parameters
         self.odom_msg = Odometry()
@@ -36,10 +37,10 @@ class OdomNode(Node):
         self.odom_msg.pose.pose.orientation.z = 0.0
         self.odom_msg.pose.pose.orientation.w = 1.0
 
-        self.br = TransformBroadcaster(self)
-        self.transform_stamped = TransformStamped()
-        self.transform_stamped.header.frame_id = "odom"
-        self.transform_stamped.child_frame_id = "base_footprint"
+        # self.br = TransformBroadcaster(self)
+        # self.transform_stamped = TransformStamped()
+        # self.transform_stamped.header.frame_id = "odom"
+        # self.transform_stamped.child_frame_id = "base_footprint"
 
         self.prev_time = self.get_clock().now()
         
@@ -67,7 +68,7 @@ class OdomNode(Node):
         self.x += d_s * math.cos(self.theta)
         self.y += d_s * math.sin(self.theta)
 
-        # Compose and publish the odom message
+        # Compose the odom message (published by timer at 20 Hz)
         q = quaternion_from_euler(0, 0, self.theta)
         self.odom_msg.header.stamp = self.get_clock().now().to_msg()
         self.odom_msg.pose.pose.position.x = self.x
@@ -78,17 +79,19 @@ class OdomNode(Node):
         self.odom_msg.pose.pose.orientation.w = q[3]
         self.odom_msg.twist.twist.linear.x = linear_vel
         self.odom_msg.twist.twist.angular.z = -angular_vel
+
+    def _publishOdom(self) -> None:
         self.odom_pub.publish(self.odom_msg)
 
         # TF
-        self.transform_stamped.transform.translation.x = self.x
-        self.transform_stamped.transform.translation.y = self.y
-        self.transform_stamped.transform.rotation.x = q[0]
-        self.transform_stamped.transform.rotation.y = q[1]
-        self.transform_stamped.transform.rotation.z = q[2]
-        self.transform_stamped.transform.rotation.w = q[3]
-        self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
-        self.br.sendTransform(self.transform_stamped)
+        # self.transform_stamped.transform.translation.x = self.x
+        # self.transform_stamped.transform.translation.y = self.y
+        # self.transform_stamped.transform.rotation.x = q[0]
+        # self.transform_stamped.transform.rotation.y = q[1]
+        # self.transform_stamped.transform.rotation.z = q[2]
+        # self.transform_stamped.transform.rotation.w = q[3]
+        # self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
+        # self.br.sendTransform(self.transform_stamped)
         
 
 def main(args=None):

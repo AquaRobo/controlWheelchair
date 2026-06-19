@@ -22,12 +22,16 @@ class Steppers(Node):
         # 🔹 Storage
         self.current_joints = [0.0] * len(self.joint_names)
         self.joint_states_received = False
+        self.pending_steps = None      # Latest converted steps waiting for final send
+        self.stable_cycles = 0         # Count how many timer cycles the packet was unchanged
+        self.stability_threshold = 3   # Send only after this many unchanged cycles
+        self.last_sent_steps = None    # Track last sent packet to avoid duplicates
 
         # 🔹 Motor configuration
         self.steps_per_rev = 200       # 1.8° stepper
         self.microstepping = 16        # driver setting
         self.gear_ratio = 1            # adjust if gearbox exists
-        self.total_steps_per_rev = (   # ✅ fixed: was [self.total](http://...)
+        self.total_steps_per_rev = (   # fixed: was [self.total](http://...)
             self.steps_per_rev *
             self.microstepping *
             self.gear_ratio
@@ -64,9 +68,9 @@ class Steppers(Node):
         # 🔹 Timer (send every 100ms)
         self.timer = self.create_timer(0.1, self.send_steps)
 
-    # 📥 Receive joint states
+    # Receive joint states
     def joint_state_callback(self, msg: JointState):
-        joint_dict = dict(zip(msg.name, msg.position))  # ✅ fixed: was [msg.name](http://...)
+        joint_dict = dict(zip(msg.name, msg.position))  # fixed: was [msg.name](http://...)
         all_found = True
         for i, name in enumerate(self.joint_names):
             if name in joint_dict:
@@ -77,7 +81,7 @@ class Steppers(Node):
             self.joint_states_received = True
 
     # =========================================================
-    # ⚙️ Conversion: radians → steps
+    #  Conversion: radians → steps
     # =========================================================
     def convert_to_steps(self, joints):
         steps = []
@@ -91,7 +95,7 @@ class Steppers(Node):
             # angle = max(min(angle, max_lim), min_lim)
 
             # 🔹 Convert to steps
-            step = int((angle / (2 * math.pi)) * self.total_steps_per_rev)  # ✅ fixed
+            step = int((angle / (2 * math.pi)) * self.total_steps_per_rev)  #  fixed
             steps.append(step)
         return steps
 
@@ -105,12 +109,27 @@ class Steppers(Node):
 
         steps = self.convert_to_steps(self.current_joints)
         steps.insert(0, 's')
-        steps[6]=0
+        steps[6] = 0
+
+        # Delay SPI send until the packet is stable; only final value is transmitted.
+        if steps != self.pending_steps:
+            self.pending_steps = steps.copy()
+            self.stable_cycles = 0
+            return
+
+        self.stable_cycles += 1
+        if self.stable_cycles < self.stability_threshold:
+            return
+
+        if steps == self.last_sent_steps:
+            return
+
+        self.last_sent_steps = steps.copy()
 
         try:
             with self.lock:
                 self.commHandler.sendData(steps)
-                self.get_logger().info(f"Sent steps: {steps}")  # ✅ fixed: removed broken self._logger line
+                self.get_logger().info(f"Sent steps: {steps}")
         except Exception as e:
             self.get_logger().error(f"SPI send failed: {e}")
 

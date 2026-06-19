@@ -12,7 +12,7 @@ class PiIMUNode(Node):
         self.imu = IMU()
         self.imu_msg = Imu()
         self.imu_msg.header.frame_id = "imu_link"
-        self.timer = self.create_timer(0.1, self.run)  # Publish at 10 Hz
+        self.timer = self.create_timer(0.05, self.run)  # Publish at 20 Hz
 
     def run(self):
         self.imu_msg.header.stamp = self.get_clock().now().to_msg()
