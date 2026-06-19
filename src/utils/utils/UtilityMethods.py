@@ -19,3 +19,12 @@ class UtilityMethods:
         if not os.path.exists(pkg_models):
             raise FileNotFoundError("Could not find project root with /models directory")
         return pkg_models
+
+    @staticmethod
+    def getPackageCalibration(pkg_name: str = "control") -> str:
+        pkg_share = get_package_share_path(pkg_name).parents[1]
+        pkg_root = os.path.dirname(os.path.dirname(pkg_share))
+        pkg_calibration = os.path.join(pkg_root, f"src/{pkg_name}/calibration")
+        if not os.path.exists(pkg_calibration):
+            raise FileNotFoundError("Could not find project root with /calibration directory")
+        return pkg_calibration

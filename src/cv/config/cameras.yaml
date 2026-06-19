@@ -1,0 +1,10 @@
+stereo_camera:
+  index: /dev/video0
+  width: 640
+  height: 480
+  fps: 20
+  port: 8081
+  format: MJPG
+  calibration: NONE
+  calibration_type: STANDARD
+  is_stereo: true

@@ -12,6 +12,7 @@ class Configurator:
     BUTTONS = "joystick_buttons"
     ROOM_POSES = "room_poses"
     SPEECH_RECOGNIZER = "speech_recognizer"
+    CAMERAS = "cameras"
 
     def __init__(self, pkg_name: str = "control"):
         self.__config_file = ''
@@ -43,6 +44,8 @@ class Configurator:
             self.__config_file = root + f"/{Configurator.ROOM_POSES}.yaml"
         elif data_type == Configurator.SPEECH_RECOGNIZER:
             self.__config_file = root + f"/{Configurator.SPEECH_RECOGNIZER}.yaml"
+        elif data_type == Configurator.CAMERAS:
+            self.__config_file = root + f"/{Configurator.CAMERAS}.yaml"
         else:
             self.__raiseTypeError(data_type)
 
