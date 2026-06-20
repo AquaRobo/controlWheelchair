@@ -1,0 +1,28 @@
+model_path: models/yolov8n.pt
+confidence_threshold: 0.5
+camera_name: stereo_camera
+room_scores:
+  bedroom:
+    - bed
+    - pillow
+    - lamp
+  bathroom:
+    - toilet
+    - sink
+    - toothbrush
+  kitchen:
+    - oven
+    - microwave
+    - refrigerator
+    - cup
+    - bottle
+    - bowl
+    - fork
+    - knife
+    - spoon
+  living_room:
+    - couch
+    - tv
+    - chair
+    - remote
+    - book

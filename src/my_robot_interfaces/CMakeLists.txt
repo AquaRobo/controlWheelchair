@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Encoders.msg"
   "msg/ObjectPose.msg"
   "msg/ObjectDetection.msg"
+  "msg/RoomIdentification.msg"
   DEPENDENCIES builtin_interfaces std_msgs sensor_msgs geometry_msgs
  )
 

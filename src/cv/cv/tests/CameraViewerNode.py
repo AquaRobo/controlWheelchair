@@ -3,8 +3,8 @@
 
 Subscribes to all camera topics published by CameraStreamerNode and
 renders them in OpenCV windows.  One window is opened per topic.
-Also subscribes to /object_detection and shows the YOLO-annotated frame
-with an overlaid pose label.
+Also subscribes to /object_detection and /room_identification and shows
+their YOLO-annotated frames with overlaid labels.
 
 Mono cameras:
     /{camera_name}/uncalibrated
@@ -19,6 +19,9 @@ Stereo cameras:
 Object detection:
     /object_detection               (annotated frame with pose overlay)
 
+Room identification:
+    /room_identification            (annotated frame with room + confidence)
+
 Press  q  or  Esc  in any window to exit.
 
 Usage
@@ -31,12 +34,13 @@ import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from my_robot_interfaces.msg import ObjectDetection
+from my_robot_interfaces.msg import ObjectDetection, RoomIdentification
 from utils.Configurator import Configurator
 from rclpy.qos import QoSProfile, HistoryPolicy, ReliabilityPolicy
 
 _QOS_DEPTH = 10
 _OD_WINDOW = 'object_detection | annotated'
+_RI_WINDOW = 'room_identification | annotated'
 
 
 def _has_calibration(cam_cfg: dict) -> bool:
@@ -57,6 +61,7 @@ class CameraViewerNode(Node):
 
         self._setup_subscriptions()
         self._setup_object_detection_subscription()
+        self._setup_room_identification_subscription()
 
     # ------------------------------------------------------------------
     # Setup
@@ -96,6 +101,16 @@ class CameraViewerNode(Node):
             _QOS_DEPTH,
         )
         self._log.info('CameraViewerNode: subscribed to /object_detection')
+
+    def _setup_room_identification_subscription(self) -> None:
+        self._frames[_RI_WINDOW] = None
+        self.create_subscription(
+            RoomIdentification,
+            '/room_identification',
+            self._on_room_identification,
+            _QOS_DEPTH,
+        )
+        self._log.info('CameraViewerNode: subscribed to /room_identification')
 
     def _subscribe_mono(self, cam_name: str, calibrated: bool, qos) -> None:
         self._add_subscription(f'/{cam_name}/uncalibrated', f'{cam_name} | uncalibrated', qos)
@@ -142,7 +157,6 @@ class CameraViewerNode(Node):
             self._log.error(f'CameraViewerNode: annotated frame conversion error: {exc}')
             return
 
-        # Overlay object name, confidence, and 3-D pose in the top-left corner
         p = msg.object_pose
         label = (
             f"{msg.object_name}  conf={msg.confidence:.2f}"
@@ -155,6 +169,22 @@ class CameraViewerNode(Node):
             (0, 255, 0), 2, cv2.LINE_AA,
         )
         self._frames[_OD_WINDOW] = frame
+
+    def _on_room_identification(self, msg: RoomIdentification) -> None:
+        try:
+            frame = self._bridge.imgmsg_to_cv2(msg.annotated_frame, desired_encoding='bgr8')
+        except Exception as exc:
+            self._log.error(f'CameraViewerNode: room annotated frame conversion error: {exc}')
+            return
+
+        label = f"Room: {msg.room_name}  conf={msg.confidence:.2f}"
+        cv2.putText(
+            frame, label,
+            (8, 24),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+            (0, 200, 255), 2, cv2.LINE_AA,
+        )
+        self._frames[_RI_WINDOW] = frame
 
     # ------------------------------------------------------------------
     # Display (called from the main loop)

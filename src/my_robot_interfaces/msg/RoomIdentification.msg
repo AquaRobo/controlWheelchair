@@ -1,0 +1,4 @@
+std_msgs/Header header
+string room_name
+float32 confidence
+sensor_msgs/Image annotated_frame
