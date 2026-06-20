@@ -3,6 +3,8 @@
 
 Subscribes to all camera topics published by CameraStreamerNode and
 renders them in OpenCV windows.  One window is opened per topic.
+Also subscribes to /object_detection and shows the YOLO-annotated frame
+with an overlaid pose label.
 
 Mono cameras:
     /{camera_name}/uncalibrated
@@ -13,6 +15,9 @@ Stereo cameras:
     /{camera_name}/left/calibrated  (only when calibration != NONE)
     /{camera_name}/right/uncalibrated
     /{camera_name}/right/calibrated (only when calibration != NONE)
+
+Object detection:
+    /object_detection               (annotated frame with pose overlay)
 
 Press  q  or  Esc  in any window to exit.
 
@@ -26,10 +31,12 @@ import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from my_robot_interfaces.msg import ObjectDetection
 from utils.Configurator import Configurator
 from rclpy.qos import QoSProfile, HistoryPolicy, ReliabilityPolicy
 
 _QOS_DEPTH = 10
+_OD_WINDOW = 'object_detection | annotated'
 
 
 def _has_calibration(cam_cfg: dict) -> bool:
@@ -49,6 +56,7 @@ class CameraViewerNode(Node):
         self._frames: dict[str, object] = {}
 
         self._setup_subscriptions()
+        self._setup_object_detection_subscription()
 
     # ------------------------------------------------------------------
     # Setup
@@ -78,6 +86,16 @@ class CameraViewerNode(Node):
                 self._subscribe_stereo(cam_name, calibrated, image_qos)
             else:
                 self._subscribe_mono(cam_name, calibrated, image_qos)
+
+    def _setup_object_detection_subscription(self) -> None:
+        self._frames[_OD_WINDOW] = None
+        self.create_subscription(
+            ObjectDetection,
+            '/object_detection',
+            self._on_detection,
+            _QOS_DEPTH,
+        )
+        self._log.info('CameraViewerNode: subscribed to /object_detection')
 
     def _subscribe_mono(self, cam_name: str, calibrated: bool, qos) -> None:
         self._add_subscription(f'/{cam_name}/uncalibrated', f'{cam_name} | uncalibrated', qos)
@@ -109,13 +127,34 @@ class CameraViewerNode(Node):
         self._log.info(f'CameraViewerNode: subscribed to {topic}')
 
     # ------------------------------------------------------------------
-    # Subscription callback
+    # Subscription callbacks
 
     def _on_frame(self, msg: Image, window_title: str) -> None:
         try:
             self._frames[window_title] = self._bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         except Exception as exc:
             self._log.error(f'CameraViewerNode: conversion error for "{window_title}": {exc}')
+
+    def _on_detection(self, msg: ObjectDetection) -> None:
+        try:
+            frame = self._bridge.imgmsg_to_cv2(msg.annotated_frame, desired_encoding='bgr8')
+        except Exception as exc:
+            self._log.error(f'CameraViewerNode: annotated frame conversion error: {exc}')
+            return
+
+        # Overlay object name, confidence, and 3-D pose in the top-left corner
+        p = msg.object_pose
+        label = (
+            f"{msg.object_name}  conf={msg.confidence:.2f}"
+            f"  X={p.x:.3f}  Y={p.y:.3f}  Z={p.z:.3f} m"
+        )
+        cv2.putText(
+            frame, label,
+            (8, 24),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+            (0, 255, 0), 2, cv2.LINE_AA,
+        )
+        self._frames[_OD_WINDOW] = frame
 
     # ------------------------------------------------------------------
     # Display (called from the main loop)

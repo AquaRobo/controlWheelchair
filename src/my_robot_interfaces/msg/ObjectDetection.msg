@@ -1,0 +1,5 @@
+std_msgs/Header header
+string object_name
+float32 confidence
+my_robot_interfaces/ObjectPose object_pose
+sensor_msgs/Image annotated_frame
