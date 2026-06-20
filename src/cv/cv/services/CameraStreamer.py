@@ -1,16 +1,15 @@
 import os
-import time
 import cv2
+import time
 import numpy as np
-from dataclasses import dataclass
 from typing import Optional
-
+from dataclasses import dataclass
+from utils.UtilityMethods import UtilityMethods
 
 @dataclass
 class MonoFrame:
     raw: np.ndarray
     calibrated: np.ndarray
-
 
 @dataclass
 class StereoFrame:
@@ -18,7 +17,6 @@ class StereoFrame:
     left_calibrated: np.ndarray
     right_raw: np.ndarray
     right_calibrated: np.ndarray
-
 
 class CameraStreamer:
     _OPEN_RETRY_INTERVAL = 0.5   # seconds between retries
@@ -135,7 +133,6 @@ class CameraStreamer:
             cal_path = str(cal_value)
         else:
             try:
-                from utils.UtilityMethods import UtilityMethods
                 cal_dir = UtilityMethods.getPackageCalibration('cv')
                 cal_path = os.path.join(cal_dir, str(cal_value))
             except FileNotFoundError:

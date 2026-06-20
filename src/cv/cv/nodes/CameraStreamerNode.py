@@ -139,35 +139,39 @@ class CameraStreamerNode(LifecycleNode):
                 return
 
             if streamer.is_stereo:
-                self._publish_stereo(frame_data, pubs)
+                self._publish_stereo(frame_data, pubs, streamer.name)
             else:
-                self._publish_mono(frame_data, pubs)
+                self._publish_mono(frame_data, pubs, streamer.name)
 
         return _callback
 
-    def _publish_mono(self, frame_data, pubs: dict) -> None:
+    def _publish_mono(self, frame_data, pubs: dict, camera_name: str) -> None:
         try:
+            stamp = self.get_clock().now().to_msg()
             raw_msg = self._bridge.cv2_to_imgmsg(frame_data.raw, encoding='bgr8')
             cal_msg = self._bridge.cv2_to_imgmsg(frame_data.calibrated, encoding='bgr8')
+            raw_msg.header.stamp = stamp
+            raw_msg.header.frame_id = camera_name
+            cal_msg.header.stamp = stamp
+            cal_msg.header.frame_id = camera_name
             pubs['raw'].publish(raw_msg)
             pubs['cal'].publish(cal_msg)
         except Exception as e:
             self._logger.error(f'Failed to publish mono frame: {e}')
 
-    def _publish_stereo(self, frame_data, pubs: dict) -> None:
+    def _publish_stereo(self, frame_data, pubs: dict, camera_name: str) -> None:
         try:
-            pubs['left_raw'].publish(
-                self._bridge.cv2_to_imgmsg(frame_data.left_raw, encoding='bgr8')
-            )
-            pubs['left_cal'].publish(
-                self._bridge.cv2_to_imgmsg(frame_data.left_calibrated, encoding='bgr8')
-            )
-            pubs['right_raw'].publish(
-                self._bridge.cv2_to_imgmsg(frame_data.right_raw, encoding='bgr8')
-            )
-            pubs['right_cal'].publish(
-                self._bridge.cv2_to_imgmsg(frame_data.right_calibrated, encoding='bgr8')
-            )
+            stamp = self.get_clock().now().to_msg()
+            for key, img in (
+                ('left_raw',  frame_data.left_raw),
+                ('left_cal',  frame_data.left_calibrated),
+                ('right_raw', frame_data.right_raw),
+                ('right_cal', frame_data.right_calibrated),
+            ):
+                msg = self._bridge.cv2_to_imgmsg(img, encoding='bgr8')
+                msg.header.stamp = stamp
+                msg.header.frame_id = camera_name
+                pubs[key].publish(msg)
         except Exception as e:
             self._logger.error(f'Failed to publish stereo frame: {e}')
 
