@@ -66,7 +66,7 @@ class RoomIdentifierNode(LifecycleNode):
         image_qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
             depth=_QOS_DEPTH,
-            reliability=ReliabilityPolicy.BEST_EFFORT,
+            reliability=ReliabilityPolicy.RELIABLE,
         )
 
         # Use the left channel for stereo cameras, plain channel for mono

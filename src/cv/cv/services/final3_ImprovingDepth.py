@@ -16,10 +16,10 @@ USE_MEDIAN_FILTER = True
 
 def initialize_stereo_camera_mjpeg():
     """Initialize stereo camera with MJPEG encoding for high FPS"""
-    camera_index = 0
+    camera_index = "/dev/video2"  # Change this to your stereo camera index
     
     print(f"\n[1/7] Opening Camera {camera_index} with DirectShow...")
-    cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(camera_index)
     
     if not cap.isOpened():
         print("[X] ERROR: Camera not found!")
@@ -115,13 +115,13 @@ def initialize_yolo():
     """Initialize YOLO model with GPU if available"""
     print("Loading YOLO model...")
     
-    if torch.cuda.is_available():
-        print(f"✅ GPU DETECTED: {torch.cuda.get_device_name(0)}")
-        model = YOLO('yolov8l.pt')  
-        model.to('cuda')
-    else:
-        print("⚠ WARNING: GPU not found. Running on CPU.")
-        model = YOLO('yolov8n.pt')
+    # if torch.cuda.is_available():
+    #     print(f"✅ GPU DETECTED: {torch.cuda.get_device_name(0)}")
+    #     model = YOLO('yolov8l.pt')  
+    #     model.to('cuda')
+    # else:
+    print("⚠ WARNING: GPU not found. Running on CPU.")
+    model = YOLO('yolov8n.pt')
     
     return model
 

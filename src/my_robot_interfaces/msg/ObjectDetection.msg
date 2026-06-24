@@ -1,4 +1,5 @@
 std_msgs/Header header
+bool is_detected
 string object_name
 float32 confidence
 my_robot_interfaces/ObjectPose object_pose

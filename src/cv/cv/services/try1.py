@@ -13,7 +13,7 @@ class BottleVisionNode:
         self.MIN_VALID_PIXELS = 20
 
         print("[INFO] Initializing Vision Node...")
-        self.model = YOLO('yolov8n_ncnn_model', task='detect')
+        self.model = YOLO('yolov8n.pt', task='detect')
         self.cap = self._initialize_camera()
         self.stereo, self.num_disp = self._initialize_stereo_matcher()
         
@@ -25,7 +25,7 @@ class BottleVisionNode:
 
     def _initialize_camera(self):
         """Your MJPEG Initialization Logic"""
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture("/dev/video2", cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
         cap.set(cv2.CAP_PROP_FPS, 30)

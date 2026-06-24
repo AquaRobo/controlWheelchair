@@ -51,6 +51,10 @@ class CameraStreamer:
     def is_stereo(self) -> bool:
         return self._is_stereo
 
+    @property
+    def has_calibration(self) -> bool:
+        return str(self._config.get('calibration', 'NONE')).upper() != 'NONE'
+
     def open(self) -> bool:
         """
         Opens the camera capture, retrying every 0.5 s for up to 10 s.
@@ -101,21 +105,82 @@ class CameraStreamer:
     # ------------------------------------------------------------------
 
     def _apply_config(self) -> None:
-        fmt = self._config.get('format', 'MJPG')
-        if len(fmt) == 4:
-            fourcc = cv2.VideoWriter_fourcc(*fmt)
-            self._cap.set(cv2.CAP_PROP_FOURCC, fourcc)
+        if self._is_stereo:
+            self._apply_stereo_config()
+        else:
+            fmt = self._config.get('format', 'MJPG')
+            if len(fmt) == 4:
+                fourcc = cv2.VideoWriter_fourcc(*fmt)
+                self._cap.set(cv2.CAP_PROP_FOURCC, fourcc)
 
-        width = self._config.get('width')
-        height = self._config.get('height')
-        fps = self._config.get('fps')
+            width = self._config.get('width')
+            height = self._config.get('height')
+            fps = self._config.get('fps')
 
-        if width:
-            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
-        if height:
-            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
-        if fps:
-            self._cap.set(cv2.CAP_PROP_FPS, float(fps))
+            if width:
+                self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
+            if height:
+                self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
+            if fps:
+                self._cap.set(cv2.CAP_PROP_FPS, float(fps))
+
+    def _apply_stereo_config(self) -> None:
+        target_w = int(self._config.get('width', 3840))
+        target_h = int(self._config.get('height', 1080))
+        fps = float(self._config.get('fps', 30))
+
+        # Step 1 – start at minimum resolution
+        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
+        self._cap.set(cv2.CAP_PROP_FPS, fps)
+
+        # Step 2 – flush camera buffer
+        for _ in range(5):
+            self._cap.read()
+            time.sleep(0.1)
+
+        # Step 3 – force MJPG codec
+        mjpg_fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        self._cap.set(cv2.CAP_PROP_FOURCC, mjpg_fourcc)
+        time.sleep(0.5)
+
+        fourcc_val = int(self._cap.get(cv2.CAP_PROP_FOURCC))
+        codec_str = ''.join([chr((fourcc_val >> 8 * i) & 0xFF) for i in range(4)])
+        if codec_str != 'MJPG':
+            self._cap.set(cv2.CAP_PROP_FOURCC, 1196444237)  # MJPG in decimal
+            time.sleep(0.3)
+
+        # Step 4 – build resolution ramp up to target
+        standard_steps = [(640, 480), (1280, 720), (1920, 1080), (3840, 1080)]
+        ramp = [s for s in standard_steps if s[0] <= target_w and s != (target_w, target_h)]
+        ramp.append((target_w, target_h))
+
+        # Step 5 – apply ramp one step at a time
+        for w, h in ramp:
+            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
+            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
+            self._cap.set(cv2.CAP_PROP_FPS, fps)
+            self._cap.set(cv2.CAP_PROP_FOURCC, mjpg_fourcc)
+            time.sleep(0.3)
+
+            real_w = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            real_h = int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            if real_w != w or real_h != h:
+                # Camera rejected this step; stop here
+                break
+
+        # Step 6 – apply exposure/focus settings if specified
+        auto_exp = self._config.get('auto_exposure')
+        exposure = self._config.get('exposure')
+        autofocus = self._config.get('autofocus')
+
+        if auto_exp is not None:
+            self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, float(auto_exp))
+        if exposure is not None:
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+        if autofocus is not None:
+            self._cap.set(cv2.CAP_PROP_AUTOFOCUS, float(autofocus))
 
     def _load_calibration(self) -> None:
         cal_value = self._config.get('calibration', 'NONE')

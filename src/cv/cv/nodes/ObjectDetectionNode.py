@@ -10,7 +10,6 @@ from rclpy.lifecycle import LifecycleNode, State, TransitionCallbackReturn
 
 _QOS_DEPTH = 10
 
-
 class ObjectDetectionNode(LifecycleNode):
 
     def __init__(self):
@@ -87,7 +86,7 @@ class ObjectDetectionNode(LifecycleNode):
         image_qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
             depth=_QOS_DEPTH,
-            reliability=ReliabilityPolicy.BEST_EFFORT,
+            reliability=ReliabilityPolicy.RELIABLE,
         )
         left_sub = message_filters.Subscriber(
             self, Image, f'/{camera_name}/left/uncalibrated',
@@ -163,6 +162,7 @@ class ObjectDetectionNode(LifecycleNode):
             msg = ObjectDetection()
             msg.header.stamp    = stamp
             msg.header.frame_id = frame_id
+            msg.is_detected     = True
             msg.object_name     = result.object_name
             msg.confidence      = result.confidence
             msg.object_pose     = ObjectPose(x=result.x, y=result.y, z=result.z)
@@ -181,7 +181,6 @@ class ObjectDetectionNode(LifecycleNode):
                 f"(conf={result.confidence:.2f}) "
                 f"X={result.x:.3f} Y={result.y:.3f} Z={result.z:.3f} m"
             )
-
 
 def main(args=None):
     rclpy.init(args=args)
