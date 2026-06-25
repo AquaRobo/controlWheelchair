@@ -21,7 +21,7 @@ def generate_launch_description():
 
     # ── 2. MoveIt move_group (delayed so controllers are up first) ────────
     move_group = TimerAction(
-        period=8.0,
+        period=10.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -31,9 +31,9 @@ def generate_launch_description():
         ]
     )
 
-    # ── 3. ArmCommander  ──────────────────────────────────────────────────
+    # ── 3. ArmCommander (needs MoveIt fully up first) ────────────────────
     arm_commander_node = TimerAction(
-        period=10.0,
+        period=20.0,
         actions=[
             Node(
                 package="control",
@@ -45,10 +45,23 @@ def generate_launch_description():
         ]
     )
 
+    # ── 4. ArmPoseNode (keyboard / voice → joint trajectories + poses) ───
+    arm_pose_node = TimerAction(
+        period=22.0,
+        actions=[
+            Node(
+                package="control",
+                executable="arm_pose_node",
+                name="arm_pose_node",
+                output="screen",
+                parameters=[{"use_sim_time": use_sim_time}],
+            )
+        ]
+    )
 
     # ── 5. CameraPoseNode ─────────────────────────────────────────────────
     camera_pose_node = TimerAction(
-        period=10.0,
+        period=22.0,
         actions=[
             Node(
                 package="control",
@@ -72,6 +85,7 @@ def generate_launch_description():
         arm_core,
         move_group,
         arm_commander_node,
+        arm_pose_node,
         camera_pose_node,
         steppers_node,
     ])
