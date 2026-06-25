@@ -175,7 +175,7 @@ def interactive_mode(sender: HoverboardSender):
 
 def main():
     parser = argparse.ArgumentParser(description="Send UART commands to hoverboard")
-    parser.add_argument("--port",  default="/dev/ttyUSB0", help="Serial port (default: /dev/ttyUSB0)")
+    parser.add_argument("--port",  default="/dev/ttyUSB2", help="Serial port (default: /dev/ttyUSB0)")
     parser.add_argument("--baud",  type=int, default=BAUD_RATE, help=f"Baud rate (default: {BAUD_RATE})")
     parser.add_argument("--speed", type=int, default=None, help="Speed value and hold until Ctrl-C")
     parser.add_argument("--steer", type=int, default=0,    help="Steer value to use with --speed (default: 0)")
