@@ -5,6 +5,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
+from my_robot_interfaces.msg import ObjectDetection
 from builtin_interfaces.msg import Duration
 from my_robot_interfaces.msg import PoseCommand
 from tf_transformations import euler_from_quaternion
@@ -56,8 +57,8 @@ class ArmPoseNode(Node):
         self.joint_state_sub_ = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
 
         self.camera_target_sub_ = self.create_subscription(
-            PointStamped,
-            '/base_link/object_position',
+            ObjectDetection,
+            '/base_link/object_detection',
             self.camera_target_callback,
             10
         )
@@ -96,15 +97,15 @@ class ArmPoseNode(Node):
         return False
 
     # ----------------- Subscribers -----------------
-    def camera_target_callback(self, msg: PointStamped):
+    def camera_target_callback(self, msg: ObjectDetection):
         self.dynamic_target = {
-            "x": msg.point.x,
-            "y": msg.point.y,
-            "z": msg.point.z,
+            "x": msg.object_pose.x,
+            "y": msg.object_pose.y,
+            "z": msg.object_pose.z,
             "roll": GRASP_ROLL,
             "pitch": GRASP_PITCH,
             "yaw": GRASP_YAW
-        }
+    }
        
 
     def joint_state_callback(self, msg: JointState):
