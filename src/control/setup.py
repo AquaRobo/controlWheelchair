@@ -45,6 +45,7 @@ setup(
             'hoverboard_node = control.nodes.HoverBoardNode:main',
             'camera_pose_node = control.nodes.CameraPoseNode:main',
             'steppers_node = control.nodes.ArmControl:main',
+            'voice_navigation_node = control.nodes.VoiceNavigationNode:main',
         ],
     },
 )

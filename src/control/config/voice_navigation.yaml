@@ -1,0 +1,10 @@
+linear_distance_goal: 1.0 
+angular_degree_goal: 30
+linear_speed: 0.2
+angular_speed: 0.3
+rpm_noise_floor: 0.5
+supported_actions:
+  - forward
+  - backward
+  - left
+  - right

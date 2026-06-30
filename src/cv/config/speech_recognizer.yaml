@@ -1,15 +1,26 @@
-# Audio
-sample_rate: 16000
-listen_duration: 3
-buffer_size: 16000
+# ── Audio ─────────────────────────────────────────────────────
+sample_rate: 16000            # sounddevice capture rate (Whisper native)
+target_sample_rate: 16000     # Whisper expects 16 kHz
 
-# Wake word
-wake_word_threshold: 0.4
+# ── Wake word detection ───────────────────────────────────────
+wake_duration: 2.0            # seconds per rolling listen chunk
+wake_words:
+  milo: Milo
+  jarvis: Jarvis
 
-# Whisper
-whisper_model: base.en
+# ── Silence / energy gate ─────────────────────────────────────
+energy_threshold: 0.01        # chunks below this RMS are skipped
 
-# Command extraction
+# ── Cooldown ──────────────────────────────────────────────────
+cooldown_seconds: 2.0         # minimum seconds between wake-word detections
+
+# ── Command recording ─────────────────────────────────────────
+command_duration: 3.0         # seconds of audio captured for Whisper after wake word
+
+# ── Whisper ───────────────────────────────────────────────────
+whisper_model: tiny.en        # tiny.en is fast; use base.en for better accuracy
+
+# ── Command extraction ────────────────────────────────────────
 rooms:
   - kitchen
   - bedroom
@@ -30,16 +41,12 @@ objects:
 
 actions:
   - grab
-  - "first position"
-  - "second position"
-  - "hand up"
-  - "hand down"
-  - "tilt right"
-  - "tilt left"
   - up
   - down
   - left
   - right
-  - back
+  - backward
   - forward
-  - water
+  - "first position"
+  - "second position"
+  - "exit command mode"
