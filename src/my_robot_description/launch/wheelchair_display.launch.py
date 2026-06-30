@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_path
 def generate_launch_description():
 
     urdf_path = os.path.join(get_package_share_path('my_robot_description'),
-                             'urdf', 'my_wheelchair.urdf.xacro')
+                             'urdf', 'wheel_robot.urdf')
     rviz_config_path = os.path.join(get_package_share_path('my_robot_description'),
                                     'rviz', 'wheelchair_config.rviz')
     
