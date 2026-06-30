@@ -3,6 +3,7 @@ import math
 import threading
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
+from std_msgs.msg import String
 from utils.Dispatcher import Dispatcher
 
 class Steppers(Node):
@@ -54,11 +55,19 @@ class Steppers(Node):
         # 🔹 Thread safety for SPI
         self.lock = threading.Lock()
 
-        # 🔹 Subscriber
+        # 🔹 Subscriber — joint states
         self.joint_state_sub_ = self.create_subscription(
             JointState,
             '/joint_states',
             self.joint_state_callback,
+            10
+        )
+
+        # 🔹 Subscriber — gripper commands ("open" / "close")
+        self.gripper_sub_ = self.create_subscription(
+            String,
+            '/gripper_command',
+            self.gripper_callback,
             10
         )
 
@@ -67,6 +76,25 @@ class Steppers(Node):
 
         # 🔹 Timer (send every 100ms)
         self.timer = self.create_timer(0.1, self.send_steps)
+
+
+    # Receive gripper commands ("open" / "close") and forward to ESP via SPI
+    def gripper_callback(self, msg: String):
+        command = msg.data.strip().lower()
+        if command == 'open':
+            grip_val = 0
+        elif command == 'close':
+            grip_val = 1
+        else:
+            self.get_logger().warn(f"Unknown gripper command: '{command}' (expected 'open' or 'close')")
+            return
+
+        try:
+            with self.lock:
+                self.commHandler.sendData(['g', grip_val])
+                self.get_logger().info(f"Gripper → {'Open' if grip_val == 0 else 'Close'}")
+        except Exception as e:
+            self.get_logger().error(f"Gripper SPI send failed: {e}")
 
     # Receive joint states
     def joint_state_callback(self, msg: JointState):

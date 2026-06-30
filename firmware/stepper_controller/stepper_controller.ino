@@ -1,6 +1,7 @@
 #include "/home/mahmoud/ESP/headers/SPIHandler.h"
 #include "/home/mahmoud/ESP/services/SPIHandler.cpp"
 #include <AccelStepper.h>
+#include <ESP32Servo.h>
 #include <stdlib.h>
 
 // -------------------------------------------------------
@@ -20,14 +21,16 @@ SPIHandler spi_handler(40, 4);
 #define STEP_GEARED       33    // stepper3 - Geared shoulder (5.18:1)
 #define DIR_GEARED         4
 
-#define STEP_FOREARM      26    // stepper4 - Forearm
-#define DIR_FOREARM       25
+#define STEP_FOREARM      32    // stepper4 - Forearm
+#define DIR_FOREARM       16
 
-#define STEP_WRIST        32    // stepper5 - Wrist
-#define DIR_WRIST         16
+#define STEP_WRIST        26    // stepper5 - Wrist
+#define DIR_WRIST         25
 
 #define STEP_ROTATION     36    // stepper6 - Base Rotation
 #define DIR_ROTATION       2
+
+#define SERVO_PIN          13    // Gripper servo GPIO
 
 // ------------------------------------------------------------
 // Motor Speed & Acceleration
@@ -38,12 +41,12 @@ SPIHandler spi_handler(40, 4);
 // ------------------------------------------------------------
 #define MICROSTEPS          16
 #define STEPS_PER_REV       (200 * MICROSTEPS)   // 3200
+#define SPEED_STANDARD   4000
+#define ACCEL_STANDARD   6000
 
-#define SPEED_STANDARD      8000
 #define SPEED_WRIST          300
 #define SPEED_ROTATION      6000
 
-#define ACCEL_STANDARD     16000
 #define ACCEL_WRIST          600
 #define ACCEL_ROTATION     12000
 
@@ -56,6 +59,12 @@ AccelStepper motorGeared    (AccelStepper::DRIVER, STEP_GEARED,     DIR_GEARED);
 AccelStepper motorForearm   (AccelStepper::DRIVER, STEP_FOREARM,    DIR_FOREARM);
 AccelStepper motorWrist     (AccelStepper::DRIVER, STEP_WRIST,      DIR_WRIST);
 AccelStepper motorRotation  (AccelStepper::DRIVER, STEP_ROTATION,   DIR_ROTATION);
+
+// -------------------------------------------------------
+// Gripper Servo
+// -------------------------------------------------------
+Servo gripperServo;
+char lastGripperCmd = 0;
 
 // -------------------------------------------------------
 // Globals
@@ -141,20 +150,20 @@ void actuatorTask(void* arg) {
 
                 // Joint 2 → Shoulder (both motors, mirrored)
                 if (newSteps[1] != prevSteps[1]) {
-                    motorShoulderR.moveTo( newSteps[1]);
-                    motorShoulderL.moveTo(-newSteps[1]);
+                    motorShoulderR.moveTo( 2*newSteps[1]);
+                    motorShoulderL.moveTo(-2*newSteps[1]);
                     prevSteps[1] = newSteps[1];
                 }
 
                 // Joint 3 → Geared shoulder
                 if (newSteps[2] != prevSteps[2]) {
-                    motorGeared.moveTo(newSteps[2]);
+                    motorGeared.moveTo(-15*newSteps[2]);
                     prevSteps[2] = newSteps[2];
                 }
 
                 // Joint 4 → Forearm
                 if (newSteps[3] != prevSteps[3]) {
-                    motorForearm.moveTo(newSteps[3]);
+                    motorForearm.moveTo(-newSteps[3]);
                     prevSteps[3] = newSteps[3];
                 }
 
@@ -171,6 +180,20 @@ void actuatorTask(void* arg) {
                     Serial.printf("Targets → Rot:%d  Sh:%d  Gear:%d  Fore:%d  Wrist:%d\n",
                                   newSteps[0], newSteps[1], newSteps[2],
                                   newSteps[3], newSteps[4]);
+                }
+            }
+
+            // 'g' command — gripper servo (1 byte: 0=open, 1=close)
+            else if (cmd == 'g' && actuators.size() >= 5) {
+                uint8_t grip = actuators[4];
+                if (grip == 0 && lastGripperCmd != 0) {
+                    gripperServo.write(20);
+                    lastGripperCmd = 0;
+                    Serial.println("GRIPPER → Open");
+                } else if (grip == 1 && lastGripperCmd != 1) {
+                    gripperServo.write(90);
+                    lastGripperCmd = 1;
+                    Serial.println("GRIPPER → Close");
                 }
             }
         }
@@ -205,6 +228,10 @@ void stepperTask(void* arg) {
 void setup() {
     Serial.begin(115200);
 
+    // Gripper servo
+    gripperServo.attach(SERVO_PIN);
+    gripperServo.write(20);  // Start open
+
     // Shoulder motors
     motorShoulderR.setMaxSpeed(SPEED_STANDARD);
     motorShoulderR.setAcceleration(ACCEL_STANDARD);
@@ -213,8 +240,8 @@ void setup() {
     motorShoulderL.setAcceleration(ACCEL_STANDARD);
 
     // Geared shoulder
-    motorGeared.setMaxSpeed(SPEED_STANDARD);
-    motorGeared.setAcceleration(ACCEL_STANDARD);
+    motorGeared.setMaxSpeed(7*SPEED_STANDARD);
+    motorGeared.setAcceleration(7*ACCEL_STANDARD);
 
     // Forearm
     motorForearm.setMaxSpeed(SPEED_STANDARD);

@@ -1,11 +1,9 @@
-# Default initial positions for my_robot_description's ros2_control fake system
-
 initial_positions:
-  Gripper_Idol_Gear_Joint: 0
-  Gripper_Servo_Gear_Joint: 0
-  Joint_1: 0
-  Joint_2: 0
-  Joint_3: 0
-  Joint_4: 0
-  Joint_5: 0
-  Joint_6: 0
+  Gripper_Idol_Gear_Joint: 0.0
+  Gripper_Servo_Gear_Joint: 0.0
+  Joint_1: -9.306237189323058e-05
+  Joint_2: 0.73
+  Joint_3: 0.49999999998185113
+  Joint_4: -0.4999999999946486
+  Joint_5: 1.0
+  Joint_6: 0.0

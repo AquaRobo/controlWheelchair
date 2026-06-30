@@ -6,3 +6,4 @@ downscale_width: 640
 min_valid_pixels: 20
 classes:
   - bottle
+  - cup
