@@ -138,12 +138,6 @@ class Steppers(Node):
         steps = self.convert_to_steps(self.current_joints)
         steps.insert(0, 's')
         steps[6] = 0
-        
-        # 🔹 CRITICAL: ESP32 expects exactly 40 bytes (BUFFER_SIZE=40)
-        # 's' + 6 ints = 7 elements * 4 bytes = 28 bytes.
-        # We need 10 elements total to make 40 bytes, so append 3 dummy zeros.
-        while len(steps) < 10:
-            steps.append(0)
 
         # Delay SPI send until the packet is stable; only final value is transmitted.
         if steps != self.pending_steps:
