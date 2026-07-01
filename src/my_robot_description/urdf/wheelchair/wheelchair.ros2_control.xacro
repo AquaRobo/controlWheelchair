@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <joint name="rcaster_joint">
+        <state_interface name="position" />
+    </joint>
+    <joint name="rcaster_wheel_joint">
+        <state_interface name="position" />
+    </joint>
+    <joint name="lcaster_joint">
+        <state_interface name="position" />
+    </joint>
+    <joint name="lcaster_wheel_joint">
+        <state_interface name="position" />
+    </joint>
+    <joint name="rb_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+    </joint>
+    <joint name="lb_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+    </joint>
+</robot>

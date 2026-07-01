@@ -15,8 +15,14 @@ def generate_launch_description():
     lidar_sim = "false" if EnvParams().LIDAR == "REALTIME" else "true"
     imu_value = EnvParams().IMU
     imu_sim = "false" if imu_value in ("REALTIME", "PI") else "true"
+    camera_sim = "false" if EnvParams().CAMERA == "REALTIME" else "true"
     use_mock_hardware = "true" if EnvParams().USE_MOCK_HARDWARE == 'true' else "false"
-    launch_file = "world_viz.launch.py" if EnvParams().VISUALIZATION == "ON" else "world_core.launch.py"
+    if EnvParams().VISUALIZATION == "ON":
+        launch_file = "world_viz.launch.py"
+    elif EnvParams().VISUALIZATION == "GAZEBO":
+        launch_file = "world.launch.py"
+    else:
+        launch_file = "world_core.launch.py"
 
     twist_mux_params = os.path.join(get_package_share_directory('control'),'config','twist_mux.yaml')
     mapping_params = os.path.join(get_package_share_directory('control'),'config','mapping.yaml')
@@ -25,7 +31,7 @@ def generate_launch_description():
     wheelchair_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory("my_robot_bringup"), "launch"), f"/{launch_file}"]),
-            launch_arguments={'use_lidar_sim': lidar_sim, 'use_imu_sim': imu_sim, 'use_mock_hardware': use_mock_hardware}.items()
+            launch_arguments={'use_lidar_sim': lidar_sim, 'use_imu_sim': imu_sim, 'use_camera_sim': camera_sim, 'use_mock_hardware': use_mock_hardware}.items()
     )
 
     lidar_launch = IncludeLaunchDescription(
@@ -128,8 +134,8 @@ def generate_launch_description():
     return LaunchDescription([
         wheelchair_bringup,
         navigation_node,
-        odom_node,
-        slam_async_launch,
+        # odom_node,
+        # slam_async_launch,
         twist_mux_node,
         lidar_launch,
         # room_pose_saver_node,
@@ -139,5 +145,5 @@ def generate_launch_description():
         robot_localization_node,
         imu_node,
         pi_imu_node,
-        hoverboard_node
+        # hoverboard_node
     ])

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="wheel_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.034703 -0.030762 0.4133" rpy="0 0 0" />
+      <mass value="29.169" />
+      <inertia ixx="1.8151" ixy="6.2642E-05" ixz="-3.4057E-05" iyy="2.0404" iyz="-0.15331" izz="1.8019" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="rb_link">
+    <inertial>
+      <origin xyz="4.8728E-06 0.03315 -2.4291E-12" rpy="0 0 0" />
+      <mass value="1.6462" />
+      <inertia ixx="0.0038177" ixy="-4.488E-07" ixz="3.5076E-10" iyy="0.0068489" iyz="-1.6695E-14" izz="0.0038176" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rb_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79608 0.82353 0.93725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rb_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rb_joint" type="continuous">
+    <origin xyz="-0.29763 0.15869 0.098" rpy="0 0 -1.5708" />
+    <parent link="base_link" />
+    <child link="rb_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <link name="lb_link">
+    <inertial>
+      <origin xyz="4.8728E-06 -0.03315 2.4291E-12" rpy="0 0 0" />
+      <mass value="1.6462" />
+      <inertia ixx="0.0038177" ixy="4.488E-07" ixz="-3.5076E-10" iyy="0.0068489" iyz="-1.6694E-14" izz="0.0038176" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lb_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79608 0.82353 0.93725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lb_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="lb_joint" type="continuous">
+    <origin xyz="0.29763 0.15869 0.098" rpy="0 0 -1.5708" />
+    <parent link="base_link" />
+    <child link="lb_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <link name="rcaster_link">
+    <inertial>
+      <origin xyz="0.0084911 6.2993E-08 -0.020801" rpy="0 0 0" />
+      <mass value="0.066356" />
+      <inertia ixx="0.00015145" ixy="-3.706E-11" ixz="3.0557E-05" iyy="0.00014025" iyz="-3.2899E-11" izz="4.1434E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rcaster_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rcaster_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rcaster_joint" type="continuous">
+    <origin xyz="-0.2159 -0.31274 0.2032" rpy="0 0 -1.5414" />
+    <parent link="base_link" />
+    <child link="rcaster_link" />
+    <axis xyz="0 0 -1" />
+  </joint>
+
+  <link name="rcaster_wheel_link">
+    <inertial>
+      <origin xyz="-0.00088601 0.030149 -1.1102E-16" rpy="0 0 0" />
+      <mass value="0.29095" />
+      <inertia ixx="0.00088078" ixy="-2.4602E-05" ixz="-4.4595E-19" iyy="0.0017172" iyz="3.2164E-20" izz="0.00088006" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rcaster_wheel_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.25098 0.25098 0.25098 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/rcaster_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rcaster_wheel_joint" type="continuous">
+    <origin xyz="0.0508 -0.030163 -0.10795" rpy="0 0 -0.029379" />
+    <parent link="rcaster_link" />
+    <child link="rcaster_wheel_link" />
+    <axis xyz="0.029375 0.99957 0" />
+  </joint>
+
+  <link name="lcaster_link">
+    <inertial>
+      <origin xyz="0.0084911 6.9542E-08 -0.020801" rpy="0 0 0" />
+      <mass value="0.066356" />
+      <inertia ixx="0.00015145" ixy="-3.8993E-11" ixz="3.0557E-05" iyy="0.00014025" iyz="-4.9722E-11" izz="4.1434E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lcaster_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lcaster_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="lcaster_joint" type="continuous">
+    <origin xyz="0.2159 -0.31274 0.2032" rpy="0 0 -1.6081" />
+    <parent link="base_link" />
+    <child link="lcaster_link" />
+    <axis xyz="0 0 -1" />
+  </joint>
+
+  <link name="lcaster_wheel_link">
+    <inertial>
+      <origin xyz="1.4572E-16 -0.030162 -5.5511E-17" rpy="0 0 0" />
+      <mass value="0.29095" />
+      <inertia ixx="0.00088006" ixy="5.1838E-19" ixz="3.4931E-21" iyy="0.001718" iyz="-4.8105E-20" izz="0.00088006" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lcaster_wheel_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.25098 0.25098 0.25098 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/lcaster_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="lcaster_wheel_joint" type="continuous">
+    <origin xyz="0.0508 0.030163 -0.10795" rpy="0 0 0" />
+    <parent link="lcaster_link" />
+    <child link="lcaster_wheel_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+</robot>

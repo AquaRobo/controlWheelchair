@@ -23,16 +23,18 @@ def generate_launch_description():
     ## Simulation arguments
     use_lidar_sim = LaunchConfiguration('use_lidar_sim')
     use_imu_sim = LaunchConfiguration('use_imu_sim')
+    use_camera_sim = LaunchConfiguration('use_camera_sim')
     use_mock_hardware = LaunchConfiguration('use_mock_hardware')
     lidar_sim_arg = DeclareLaunchArgument('use_lidar_sim', default_value='true')
     imu_sim_arg = DeclareLaunchArgument('use_imu_sim', default_value='true')
-    mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value='true')
+    camera_sim_arg = DeclareLaunchArgument('use_camera_sim', default_value='true')
+    mock_hw_arg = DeclareLaunchArgument('use_mock_hardware', default_value='false')
     # Package paths
     robot_description_pkg = get_package_share_directory('my_robot_description')
     pkg_worlds = get_package_share_directory('gazebo_worlds')
 
     # Paths
-    urdf_path = os.path.join(robot_description_pkg, 'urdf', 'my_wheelchair.urdf.xacro')
+    urdf_path = os.path.join(robot_description_pkg, 'urdf', 'wheel_robot.urdf.xacro')
     rviz_config_path = os.path.join(robot_description_pkg, 'rviz', 'wheelchair_config.rviz')
     world_path = os.path.join(pkg_worlds, 'worlds', 'house_turtlebot.world')
     
@@ -41,6 +43,7 @@ def generate_launch_description():
             'xacro ', urdf_path,
             ' use_lidar_sim:=', use_lidar_sim,
             ' use_imu_sim:=', use_imu_sim,
+            ' use_camera_sim:=', use_camera_sim,
             ' use_mock_hardware:=', use_mock_hardware,
         ]),
         value_type=str
@@ -94,7 +97,7 @@ def generate_launch_description():
         executable="create",
         output="screen",
         arguments=["-topic", "robot_description",
-                   "-name", "my_wheelchair"]
+                   "-name", "wheel_robot"]
     )
 
     gz_ros2_bridge = Node(
@@ -104,6 +107,10 @@ def generate_launch_description():
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "stereo_camera/left/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            "stereo_camera/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            "stereo_camera/right/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            "stereo_camera/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ]
     )
 
@@ -124,6 +131,7 @@ def generate_launch_description():
         AppendEnvironmentVariable(name='GAZEBO_MODEL_PATH', value=share_root),
         lidar_sim_arg,
         imu_sim_arg,
+        camera_sim_arg,
         mock_hw_arg,
         robot_state_publisher_node,
         delayed_joint_state_spawner,

@@ -46,8 +46,8 @@ class OdomNode(Node):
         
     def _jointCallback(self, msg: JointState) -> None:
         joint_names_index = {n: i for i, n in enumerate(msg.name)}
-        dp_rear_left = msg.position[joint_names_index['lb_1_joint']] - self.rear_left_wheel_prev_pos
-        dp_rear_right = msg.position[joint_names_index['rb_1_joint']] - self.rear_right_wheel_prev_pos 
+        dp_rear_left = msg.position[joint_names_index['lb_joint']] - self.rear_left_wheel_prev_pos
+        dp_rear_right = msg.position[joint_names_index['rb_joint']] - self.rear_right_wheel_prev_pos 
         dt = Time.from_msg(msg.header.stamp) - self.prev_time
 
         # guard against zero/negative dt
@@ -56,8 +56,8 @@ class OdomNode(Node):
             return
 
         # Actualize the prev pose for the next iteration
-        self.rear_left_wheel_prev_pos = msg.position[joint_names_index['lb_1_joint']]
-        self.rear_right_wheel_prev_pos = msg.position[joint_names_index['rb_1_joint']]
+        self.rear_left_wheel_prev_pos = msg.position[joint_names_index['lb_joint']]
+        self.rear_right_wheel_prev_pos = msg.position[joint_names_index['rb_joint']]
         self.prev_time = Time.from_msg(msg.header.stamp)
 
         fi_rear_left, fi_rear_right = OdometryEvaluator.getRotationalSpeeds(dp_rear_left, dp_rear_right, dt.nanoseconds)

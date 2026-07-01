@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="wheel_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <link name="base_arm_link">
+    <inertial>
+      <origin xyz="-1.3127E-05 2.693E-05 0.033518" rpy="0 0 0" />
+      <mass value="4.8005" />
+      <inertia ixx="0.010588" ixy="0.00016585" ixz="-3.0501E-07" iyy="0.0095576" iyz="-2.8798E-07" izz="0.0096309" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/base_arm_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/base_arm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_arm_joint" type="continuous">
+    <origin xyz="0.4509 -0.092225 0.72154" rpy="0 0 -1.5708" />
+    <parent link="base_link" />
+    <child link="base_arm_link" />
+    <axis xyz="0 0 -1" />
+  </joint>
+
+  <link name="shoulder_link">
+    <inertial>
+      <origin xyz="-0.0031383 0.0013275 0.079004" rpy="0 0 0" />
+      <mass value="1.9087" />
+      <inertia ixx="0.0049688" ixy="1.8849E-05" ixz="7.3395E-05" iyy="0.0048564" iyz="2.1387E-05" izz="0.0028977" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/shoulder_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/shoulder_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="shoulder_joint" type="revolute">
+    <origin xyz="0 0 0.1402" rpy="0 0 0" />
+    <parent link="base_arm_link" />
+    <child link="shoulder_link" />
+    <axis xyz="0.15516 0.98789 0" />
+    <limit lower="-1.8" upper="1.8" effort="0" velocity="0" />
+  </joint>
+
+  <link name="geared_link">
+    <inertial>
+      <origin xyz="-3.6626E-06 -0.00065071 0.037984" rpy="0 0 0" />
+      <mass value="0.65465" />
+      <inertia ixx="0.0016892" ixy="-4.2235E-05" ixz="3.7434E-07" iyy="0.0019515" iyz="-2.1176E-06" izz="0.00042425" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/geared_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/geared_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="geared_joint" type="revolute">
+    <origin xyz="-0.0079515 -0.0012489 0.22098" rpy="0 0 0" />
+    <parent link="shoulder_link" />
+    <child link="geared_link" />
+    <axis xyz="-0.15516 0.98789 0" />
+    <limit lower="-3.665" upper="3.665" effort="0" velocity="0" />
+  </joint>
+
+  <link name="arm_link">
+    <inertial>
+      <origin xyz="-0.0011585 0.010519 0.04396" rpy="0 0 0" />
+      <mass value="0.61707" />
+      <inertia ixx="0.00066348" ixy="1.0914E-05" ixz="9.9804E-06" iyy="0.0005735" iyz="5.7394E-07" izz="0.00036176" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/arm_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.29412 0.29412 0.29412 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/arm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="arm_joint" type="continuous">
+    <origin xyz="-6.4191E-05 -1.0082E-05 0.128" rpy="0 0 0" />
+    <parent link="geared_link" />
+    <child link="arm_link" />
+    <axis xyz="0.00050149 7.8765E-05 -1" />
+  </joint>
+
+  <link name="wrist_link">
+    <inertial>
+      <origin xyz="-0.0029994 -0.00015876 0.013034" rpy="0 0 0" />
+      <mass value="0.19056" />
+      <inertia ixx="8.1806E-05" ixy="-3.6769E-06" ixz="4.5934E-06" iyy="0.00011282" iyz="3.3203E-07" izz="6.3586E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/wrist_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.098039 0.098039 0.098039 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/wrist_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wrist_joint" type="revolute">
+    <origin xyz="0.00010752 -0.00099537 0.095" rpy="0 0 0" />
+    <parent link="arm_link" />
+    <child link="wrist_link" />
+    <axis xyz="-0.12076 0.99268 1.763E-05" />
+    <limit lower="-3.14" upper="3.14" effort="0" velocity="0" />
+  </joint>
+
+  <link name="gripper_link">
+    <inertial>
+      <origin xyz="-0.0024423 -0.00039792 0.066784" rpy="0 0 0" />
+      <mass value="0.033769" />
+      <inertia ixx="1.0235E-05" ixy="5.8578E-08" ixz="1.9498E-06" iyy="9.7559E-06" iyz="2.3938E-07" izz="2.7885E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/gripper_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.6 1 0.27843 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/gripper_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="gripper_joint" type="prismatic">
+    <origin xyz="-0.022909 -0.0027874 0.036528" rpy="0 0 0" />
+    <parent link="wrist_link" />
+    <child link="gripper_link" />
+    <axis xyz="0.12076 -0.99268 -1.763E-05" />
+    <limit lower="0" upper="0" effort="0" velocity="0" />
+  </joint>
+
+</robot>

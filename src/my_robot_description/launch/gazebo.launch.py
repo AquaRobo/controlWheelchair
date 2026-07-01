@@ -1,20 +1,20 @@
 import os
-from ament_index_python.packages import get_package_share_directory, get_package_share_path
-
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
-from launch.substitutions import Command, LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
 from launch_ros.actions import Node
+from launch import LaunchDescription
+from launch.substitutions import Command
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import AppendEnvironmentVariable, IncludeLaunchDescription
+from ament_index_python.packages import get_package_share_directory, get_package_share_path
 
 def generate_launch_description():
 
     urdf_path = os.path.join(get_package_share_path('my_robot_description'),
-                             'urdf', 'my_wheelchair.urdf.xacro')
+                             'urdf', 'wheel_robot.urdf.xacro')
     rviz_config_path = os.path.join(get_package_share_path('my_robot_description'),
                                     'rviz', 'wheelchair_config.rviz')
+    
+    share_root = os.path.dirname(get_package_share_directory('my_robot_description'))
     
     robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
 
@@ -49,10 +49,12 @@ def generate_launch_description():
         executable="create",
         output="screen",
         arguments=["-topic", "robot_description",
-                   "-name", "my_wheelchair"],
+                   "-name", "wheel_robot"],
     )
 
     return LaunchDescription([
+        AppendEnvironmentVariable(name='GZ_SIM_RESOURCE_PATH', value=share_root),
+        AppendEnvironmentVariable(name='GAZEBO_MODEL_PATH', value=share_root),
         robot_state_publisher_node,
         joint_state_publisher_gui_node,
         rviz2_node,

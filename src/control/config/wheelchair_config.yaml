@@ -1,5 +1,5 @@
-rear_wheels_radius: 0.18
-rear_wheels_separation: 0.68
+rear_wheels_radius: 0.0825
+rear_wheels_separation: 0.55
 front_wheels_radius: 0.125
 front_wheels_separation: 0.8
 number_of_motors: 2

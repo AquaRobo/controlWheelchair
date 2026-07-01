@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="wheel_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <link name="camera_link">
+    <inertial>
+      <origin xyz="-0.00092571 -0.00011265 0.002395" rpy="0 0 0" />
+      <mass value="0.021726" />
+      <inertia ixx="9.1161E-05" ixy="1.078E-05" ixz="-1.9517E-07" iyy="3.8546E-06" iyz="-2.5353E-08" izz="9.3219E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/camera_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0 0 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/wheel_robot_meshes/camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="-0.040904 -0.0049768 0.054707" rpy="0 0 0" />
+    <parent link="wrist_link" />
+    <child link="camera_link" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <!-- Stereo camera: two eyes offset +/- baseline/2 along camera_link's local Y axis.
+       baseline = 0.065 m here  match this to your real /dev/video2 rig's lens spacing. -->
+
+  <link name="stereo_camera_left_link">
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9" />
+    </inertial>
+  </link>
+
+  <joint name="stereo_camera_left_joint" type="fixed">
+    <origin xyz="0 0.0325 0" rpy="0 0 0" />
+    <parent link="camera_link" />
+    <child link="stereo_camera_left_link" />
+  </joint>
+
+  <link name="stereo_camera_left_optical_frame"/>
+  <joint name="stereo_camera_left_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708" />
+    <parent link="stereo_camera_left_link" />
+    <child link="stereo_camera_left_optical_frame" />
+  </joint>
+
+
+  <link name="stereo_camera_right_link">
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9" />
+    </inertial>
+  </link>
+
+  <joint name="stereo_camera_right_joint" type="fixed">
+    <origin xyz="0 -0.0325 0" rpy="0 0 0" />
+    <parent link="camera_link" />
+    <child link="stereo_camera_right_link" />
+  </joint>
+
+  <link name="stereo_camera_right_optical_frame"/>
+  <joint name="stereo_camera_right_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708" />
+    <parent link="stereo_camera_right_link" />
+    <child link="stereo_camera_right_optical_frame" />
+  </joint>
+
+  <gazebo reference="stereo_camera_left_link">
+    <sensor name="stereo_camera_left" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <camera>
+        <horizontal_fov>1.211</horizontal_fov>
+        <image>
+          <width>1920</width>
+          <height>1080</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>20.0</far>
+        </clip>
+      </camera>
+      <always_on>true</always_on>
+      <update_rate>30</update_rate>
+      <visualize>true</visualize>
+      <topic>stereo_camera/left/image_raw</topic>
+      <gz_frame_id>stereo_camera_left_optical_frame</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="stereo_camera_right_link">
+    <sensor name="stereo_camera_right" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <camera>
+        <horizontal_fov>1.211</horizontal_fov>
+        <image>
+          <width>1920</width>
+          <height>1080</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>20.0</far>
+        </clip>
+      </camera>
+      <always_on>true</always_on>
+      <update_rate>30</update_rate>
+      <visualize>true</visualize>
+      <topic>stereo_camera/right/image_raw</topic>
+      <gz_frame_id>stereo_camera_right_optical_frame</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+</robot>
