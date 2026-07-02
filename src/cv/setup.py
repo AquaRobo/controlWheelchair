@@ -13,6 +13,7 @@ setup(
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/models', glob('models/*')),
+        ('share/' + package_name + '/calibration', glob('calibration/*')),
     ],
     install_requires=['setuptools', 
                       'utils'],
@@ -31,7 +32,8 @@ setup(
             'object_detection_node = cv.nodes.ObjectDetectionNode:main',
             'room_identifier_node = cv.nodes.RoomIdentifierNode:main',
             'speech_recognizer_node = cv.nodes.SpeechRecognizerNode:main',
-            'camera_visualizer_test_node = cv.tests.CameraVisualizerTestNode:main',
+            'camera_viewer_node = cv.tests.CameraViewerNode:main',
+            'camera_streamer_node = cv.nodes.CameraStreamerNode:main',
         ],
     },
 )

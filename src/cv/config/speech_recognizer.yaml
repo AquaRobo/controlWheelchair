@@ -45,15 +45,8 @@ actions:
   - down
   - left
   - right
-  - back
+  - backward
   - forward
-  - close
-  - open
-  - lean
-  - level
-  - raise
-  - lower
-  - water
   - "first position"
   - "second position"
   - "exit command mode"
