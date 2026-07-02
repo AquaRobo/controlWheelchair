@@ -2,7 +2,6 @@ import os
 import re
 import subprocess
 import time
-import threading
 import numpy as np
 import sounddevice as sd
 import torch
@@ -332,7 +331,7 @@ class SpeechRecognizer:
         wake_word = self._detect_wake_word()
 
         if wake_word == "Milo":
-            print("Running Whisper for Milo…")
+            print("Running Whisper for Milo...")
             while True:
                 self._recording_command = True
                 audio         = self._record_command()
@@ -345,7 +344,7 @@ class SpeechRecognizer:
                     break
 
         elif wake_word == "Jarvis":
-            print("Running Whisper for Jarvis…")
+            print("Running Whisper for Jarvis...")
             while True:
                 self._recording_command = True
                 audio         = self._record_command()
@@ -358,7 +357,5 @@ class SpeechRecognizer:
                     break
 
     def end_stream(self):
-        self._shutdown = True
-        with self._stream_lock:
-            self.stream.stop()
-            self.stream.close()
+        self.stream.stop()
+        self.stream.close()

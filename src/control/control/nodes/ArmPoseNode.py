@@ -184,7 +184,7 @@ class ArmPoseNode(Node):
             self.publish_gripper(True)
         elif command == "close":
             self.publish_gripper(False)
-        elif command in ["up","down","left","right","forward","back","hand up","hand down","tilt right","tilt left"]:
+        elif command in ["up","down","left","right","forward","back","hand up","hand down","tilt right","tilt left","lean","level","raise","lower"]:
             self.incremental_move(command)
         elif command == "exit":
             self.get_logger().info("Exiting...")
@@ -238,13 +238,13 @@ class ArmPoseNode(Node):
             delta[2]+=self.step
         elif command=="down": 
             delta[2]-=self.step
-        elif command=="hand down": 
+        elif command=="hand down" or command=="lower": 
             delta[4]-=self.step
-        elif command=="hand up": 
+        elif command=="hand up" or command=="raise": 
             delta[4]+=self.step
-        elif command=="tilt right": 
+        elif command=="tilt right" or command=="lean": 
             delta[3]+=self.step
-        elif command=="tilt left": 
+        elif command=="tilt left" or command=="level": 
             delta[3]-=self.step
         elif command=="left": 
             delta[0]+=self.step
