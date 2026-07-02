@@ -85,7 +85,6 @@ def generate_launch_description():
         arm_core,
         move_group,
         arm_commander_node,
-        arm_pose_node,
         camera_pose_node,
         steppers_node,
     ])
