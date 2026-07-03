@@ -10,3 +10,7 @@ twist_mux:
         topic   : cmd_vel_joy
         timeout : 0.5
         priority: 105
+      speech:
+        topic   : cmd_vel_speech
+        timeout : 0.5
+        priority: 110

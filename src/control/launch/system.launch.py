@@ -112,9 +112,9 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
-    speach_recognizer_node = Node(
+    speech_recognizer_node = Node(
         package="cv",
-        executable="speach_recognizer_node",
+        executable="speech_recognizer_node",
         output="screen", 
         parameters=[{'use_sim_time': use_sim_time}]
     )
@@ -126,19 +126,27 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
+    voice_navgation_node = Node(
+        package="control",
+        executable="voice_navigation_node",
+        output="screen",
+        parameters=[{'use_sim_time': use_sim_time}]
+    )
+
     return LaunchDescription([
         wheelchair_bringup,
-        lidar_launch,
+        # lidar_launch,
         navigation_node,
         odom_node,
         odom_hardware_node,
         imu_node,
         pi_imu_node,
-        robot_localization_node,
+        # robot_localization_node,
         twist_mux_node,
-        lifelong_slam_launch,
+        # lifelong_slam_launch,
         # navigation_launch,
         # auto_nav_node,
-        # speach_recognizer_node,
+        speech_recognizer_node,
         HoverBoardNode,
+        voice_navgation_node
     ])

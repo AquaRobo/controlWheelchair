@@ -36,15 +36,24 @@ class VoiceNavigator:
         voice_nav_cfg:
             Voice navigation configuration dictionary.
         """
-        self._wheel_radius     = robot_cfg["rear_wheels_radius"]
+        self._wheel_radius = robot_cfg["rear_wheels_radius"]
         self._wheel_separation = robot_cfg["rear_wheels_separation"]
-        self._linear_goal       = voice_nav_cfg.get("linear_goal", 1.0)
-        self._angular_goal      = math.radians(voice_nav_cfg.get("angular_goal_deg", 30.0))
-        self._linear_speed      = voice_nav_cfg.get("linear_speed", 0.2)
-        self._angular_speed     = voice_nav_cfg.get("angular_speed", 0.3)
-        self._rpm_noise_floor   = voice_nav_cfg.get("rpm_noise_floor", 0.5)
-        self._rpm_to_rad_s      = math.tau / 60.0
-        self._supported_actions   = set(a.upper() for a in voice_nav_cfg.get("supported_actions", []))
+        # Support both legacy and new key names to keep runtime config backwards compatible.
+        self._linear_goal = voice_nav_cfg.get(
+            "linear_goal",
+            voice_nav_cfg.get("linear_distance_goal", 1.0),
+        )
+        self._angular_goal = math.radians(
+            voice_nav_cfg.get(
+                "angular_goal_deg",
+                voice_nav_cfg.get("angular_degree_goal", 30.0),
+            )
+        )
+        self._linear_speed = voice_nav_cfg.get("linear_speed", 0.2)
+        self._angular_speed = voice_nav_cfg.get("angular_speed", 0.3)
+        self._rpm_noise_floor = voice_nav_cfg.get("rpm_noise_floor", 0.5)
+        self._rpm_to_rad_s = math.tau / 60.0
+        self._supported_actions = set(a.upper() for a in voice_nav_cfg.get("supported_actions", []))
 
         # Active primitive state
         self._action: str | None = None   # "FORWARD" | "BACKWARD" | "LEFT" | "RIGHT"
@@ -104,9 +113,21 @@ class VoiceNavigator:
     def is_angular(self) -> bool:
         return self._action in ("LEFT", "RIGHT")
 
+    def get_active_action(self) -> str | None:
+        """Return currently active primitive action, else None."""
+        return self._action
+
+    def get_linear_progress(self) -> tuple[float, float]:
+        """Return (accumulated_metres, goal_metres)."""
+        return self._linear_accum, self._linear_goal
+
+    def get_angular_progress(self) -> tuple[float, float]:
+        """Return (accumulated_radians, goal_radians)."""
+        return self._angular_accum, self._angular_goal
+
     # ── Encoder update (linear primitives) ───────────────────────────────────
 
-    def update_linear(self, left_rpm: float, right_rpm: float, dt_ns: int) -> None:
+    def update_linear(self, left_rpm: float, right_rpm: float, dt_ns: int) -> float:
         """
         Accumulate linear displacement from a new encoder reading.
 
@@ -118,9 +139,9 @@ class VoiceNavigator:
             Time delta since the last encoder message, in nanoseconds.
         """
         if not self.is_active() or not self.is_linear():
-            return
+            return 0.0
         if dt_ns <= 0:
-            return
+            return 0.0
 
         dt_s = dt_ns / 1e9
 
@@ -138,11 +159,14 @@ class VoiceNavigator:
 
         # Only count displacement in the commanded direction
         if self._linear_sign * d_s >= 0.0:
-            self._linear_accum += abs(d_s)
+            counted = abs(d_s)
+            self._linear_accum += counted
+            return counted
+        return 0.0
 
     # ── IMU update (angular primitives) ──────────────────────────────────────
 
-    def update_angular(self, qx: float, qy: float, qz: float, qw: float) -> None:
+    def update_angular(self, qx: float, qy: float, qz: float, qw: float) -> float:
         """
         Accumulate yaw rotation from a new IMU quaternion.
 
@@ -150,20 +174,23 @@ class VoiceNavigator:
         even across the ±π boundary.
         """
         if not self.is_active() or not self.is_angular():
-            return
+            return 0.0
 
         yaw = self._quat_to_yaw(qx, qy, qz, qw)
 
         if self._prev_yaw is None:
             self._prev_yaw = yaw
-            return
+            return 0.0
 
         delta = self._wrap_angle(yaw - self._prev_yaw)
         self._prev_yaw = yaw
 
         # Only count rotation in the commanded direction
         if self._angular_sign * delta >= 0.0:
-            self._angular_accum += abs(delta)
+            counted = abs(delta)
+            self._angular_accum += counted
+            return counted
+        return 0.0
 
     # ── Completion check ─────────────────────────────────────────────────────
 

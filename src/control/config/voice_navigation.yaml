@@ -1,8 +1,14 @@
-linear_distance_goal: 1.0 
-angular_degree_goal: 30
-linear_speed: 0.2
-angular_speed: 0.3
+linear_goal: 1.0
+angular_goal_deg: 30.0
+linear_speed: 0.5
+linear_time_goal_s: 2.5
+angular_speed: 1.0
 rpm_noise_floor: 0.5
+debug_logging: true
+max_encoder_dt_s: 0.35
+sensor_timeout_s: 0.5
+max_primitive_duration_s: 12.0
+progress_log_interval_s: 0.2
 supported_actions:
   - forward
   - backward
