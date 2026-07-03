@@ -2,6 +2,11 @@
 sample_rate: 16000            # sounddevice capture rate (Whisper native)
 target_sample_rate: 16000     # Whisper expects 16 kHz
 
+# ── Microphone ───────────────────────────────────────────────
+mic_device: 0             # set to a number, "default", or "pulse" to override auto-detection
+mic_channels: 1              # 1 or 2
+mic_rate: 16000              # preferred sample rate for the microphone
+
 # ── Wake word detection ───────────────────────────────────────
 wake_duration: 2.0            # seconds per rolling listen chunk
 wake_words:
@@ -45,7 +50,7 @@ actions:
   - down
   - left
   - right
-  - back
+  - backward
   - forward
   - close
   - open

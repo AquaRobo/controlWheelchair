@@ -83,91 +83,44 @@ class SpeechRecognizer:
         return None
 
     @staticmethod
-    def select_mic_device(preferred_rate: int = 16000) -> tuple[int | str | None, int, int]:
+    def select_mic_device(preferred_rate: int = 16000, config: dict | None = None) -> tuple[int | str | None, int, int]:
         """
-        Print a numbered list of available input devices, let the user pick
-        one, and return (sd_device, channels, rate).
-
-        Combines ALSA capture devices (via PulseAudio) and sounddevice
-        pulse/default entries so USB mics always appear regardless of how
-        PortAudio enumerates them.
+        Resolve the microphone from YAML config. If no explicit device is configured,
+        fall back to a non-interactive probe of the system default input device.
         """
-        alsa_devs = SpeechRecognizer._alsa_capture_devices()
+        config = config or {}
+        configured_device = config.get("mic_device")
+        configured_channels = int(config.get("mic_channels", 1))
+        configured_rate = int(config.get("mic_rate", preferred_rate))
 
-        sd_flexible = [
-            (i, dev["name"])
-            for i, dev in enumerate(sd.query_devices())
-            if dev["name"].lower() in ("pulse", "default") and dev["max_input_channels"] > 0
-        ]
+        def _probe(device, channels, rate) -> tuple[int, int] | None:
+            for ch in [channels, 1, 2]:
+                for candidate_rate in sorted({rate, 48000, 44100, 16000}, reverse=True):
+                    try:
+                        s = sd.InputStream(device=device, samplerate=candidate_rate, channels=ch, dtype="float32")
+                        s.start(); s.stop(); s.close()
+                        return ch, candidate_rate
+                    except Exception:
+                        continue
+            return None
 
-        # Build unified menu
-        menu: list[dict] = []
-        for ad in alsa_devs:
-            menu.append({
-                "label":    f"{ad['card_name']} — {ad['name']}  (hw:{ad['card']},{ad['device']})",
-                "probe_fn": lambda c=ad["card"], d=ad["device"]: SpeechRecognizer._probe_alsa_via_pulse(c, d, preferred_rate),
-                "is_alsa":  True,
-            })
-        for sd_idx, sd_name in sd_flexible:
-            menu.append({
-                "label":    sd_name,
-                "probe_fn": lambda i=sd_idx: SpeechRecognizer._probe_sd_device(i, preferred_rate),
-                "is_alsa":  False,
-            })
-
-        # Probe each device (suppress ALSA stderr noise while doing so)
-        devnull      = open(os.devnull, "w")
-        old_stderr   = os.dup(2)
-        os.dup2(devnull.fileno(), 2)
-
-        working: dict[int, dict] = {}
-        for mi, entry in enumerate(menu):
-            result = entry["probe_fn"]()
+        if configured_device is not None:
+            print(f"[SpeechRecognizer] using configured mic device: {configured_device}")
+            result = _probe(configured_device, configured_channels, configured_rate)
             if result:
-                working[mi] = result
+                channels, rate = result
+                return configured_device, channels, rate
+            print("[SpeechRecognizer] configured mic could not be opened; falling back to system default")
+        else:
+            print("[SpeechRecognizer] no mic configured; using system default input device")
 
-        os.dup2(old_stderr, 2)
-        os.close(old_stderr)
-        devnull.close()
+        for candidate in [None, "default", "pulse"]:
+            result = _probe(candidate, 1, configured_rate)
+            if result:
+                channels, rate = result
+                return candidate, channels, rate
 
-        # Print menu
-        print("\n─── Available audio input devices ───────────────────────────")
-        for mi, entry in enumerate(menu):
-            if mi in working:
-                r = working[mi]
-                status = f"✓  {r['channels']}ch @ {r['rate']} Hz"
-            else:
-                status = "✗  unavailable"
-            print(f"  {mi:>2}  {entry['label']:<52}  {status}")
-        print("─────────────────────────────────────────────────────────────")
-
-        if not working:
-            print("   No working input devices found — using system default.\n")
-            return None, 1, preferred_rate
-
-        default_idx = next(
-            (mi for mi in working if menu[mi].get("is_alsa")),
-            next(iter(working))
-        )
-
-        while True:
-            raw = input(f"   Select [Enter = {default_idx}]: ").strip()
-            if raw == "":
-                choice = default_idx
-            else:
-                try:
-                    choice = int(raw)
-                except ValueError:
-                    print("   Please enter a number.")
-                    continue
-
-            if choice not in working:
-                print(f"   {choice} is not available — choose a device marked ✓.")
-                continue
-
-            cfg = working[choice]
-            print(f"   → {menu[choice]['label']}  ({cfg['channels']}ch @ {cfg['rate']} Hz)\n")
-            return cfg["sd_name"], cfg["channels"], cfg["rate"]
+        return None, 1, preferred_rate
 
     # ==================================================================
     # INIT
@@ -327,32 +280,35 @@ class SpeechRecognizer:
     # PUBLIC API
     # ==================================================================
 
-    def recognizeSpeech(self) -> Generator[tuple[str, str, str], None, None]:
+    def recognizeSpeech(self) -> Generator[tuple[str, str, str, str], None, None]:
         wake_word = self._detect_wake_word()
 
-        if wake_word == "Milo":
-            print("Running Whisper for Milo...")
+        rob1 = "Milo"
+        rob2 = "Jarvis"
+
+        if wake_word == rob1:
+            print(f"[SpeechRecognizer] {rob1} is now listening for a command")
             while True:
                 self._recording_command = True
-                audio         = self._record_command()
+                audio = self._record_command()
                 transcription = self._runWhisper(audio)
                 print(f"Transcription: {transcription}")
-                room   = self._getCommandedRoom(transcription)
+                room = self._getCommandedRoom(transcription)
                 action = self._getCommandedAction(transcription)
-                yield room, None, action
+                yield room, None, action, rob1
                 if action == "exit command mode":
                     break
 
-        elif wake_word == "Jarvis":
-            print("Running Whisper for Jarvis...")
+        elif wake_word == rob2:
+            print(f"[SpeechRecognizer] {rob2} is now listening for a command")
             while True:
                 self._recording_command = True
-                audio         = self._record_command()
+                audio = self._record_command()
                 transcription = self._runWhisper(audio)
                 print(f"Transcription: {transcription}")
-                obj    = self._getCommandedObject(transcription)
+                obj = self._getCommandedObject(transcription)
                 action = self._getCommandedAction(transcription)
-                yield None, obj, action
+                yield None, obj, action, rob2
                 if action == "exit command mode":
                     break
 

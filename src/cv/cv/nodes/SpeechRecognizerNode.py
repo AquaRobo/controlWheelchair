@@ -16,9 +16,9 @@ class SpeechRecognizerNode(Node):
             Configurator.SPEECH_RECOGNIZER
         )
 
-        # Terminal mic-selection prompt — must run before the stream opens
         device_index, device_channels, device_rate = SpeechRecognizer.select_mic_device(
-            preferred_rate=self.config.get("sample_rate", 16000)
+            preferred_rate=self.config.get("sample_rate", 16000),
+            config=self.config,
         )
 
         self.speech_recognizer = SpeechRecognizer(
@@ -28,8 +28,10 @@ class SpeechRecognizerNode(Node):
             device_rate=device_rate,
         )
 
-        self.room_pub    = self.create_publisher(String, "/commanded_room",   10)
-        self.object_pub  = self.create_publisher(String, "/commanded_object", 10)
+        self.robot_pub = self.create_publisher(String, "/commanded_robot", 10)
+        self.legacy_robot_pub = self.create_publisher(String, "/robot", 10)
+        self.room_pub = self.create_publisher(String, "/commanded_room", 10)
+        self.object_pub = self.create_publisher(String, "/commanded_object", 10)
         self.actions_pub = self.create_publisher(String, "/commanded_action", 10)
 
         self._detection_thread = threading.Thread(
@@ -47,11 +49,9 @@ class SpeechRecognizerNode(Node):
     def _detection_loop(self):
         while rclpy.ok():
             try:
-                for room, obj, action in self.speech_recognizer.recognizeSpeech():
-                    if any([room, obj, action]):
-                        self.executor.create_task(
-                            self._publish_results(room, obj, action)
-                        )
+                for room, obj, action, robot in self.speech_recognizer.recognizeSpeech():
+                    if any([room, obj, action, robot]):
+                        self._publish_results(room, obj, action, robot)
             except Exception as e:
                 self.get_logger().error(f"SpeechRecognizer error: {e}")
                 continue
@@ -60,7 +60,15 @@ class SpeechRecognizerNode(Node):
     # PUBLISH (executor thread)
     # =========================================================
 
-    async def _publish_results(self, room: str, obj: str, action: str):
+    def _publish_results(self, room: str, obj: str, action: str, robot: str):
+
+        if robot:
+            msg = String()
+            msg.data = robot.upper()
+            self.robot_pub.publish(msg)
+            self.legacy_robot_pub.publish(msg)
+            self.get_logger().info(f"Published Commanded Robot: {msg.data}")
+
         if room:
             msg      = String()
             msg.data = room.upper()

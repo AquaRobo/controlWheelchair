@@ -67,6 +67,7 @@ class VoiceNavigationNode(Node):
         self.create_subscription(String, "/commanded_action", self._action_callback, 10)
         self.create_subscription(Encoders, "/encoders", self._encoder_callback, 10)
         self.create_subscription(Imu, "/imu", self._imu_callback, 10)
+        self.create_subscription(String, "/commanded_robot", self._robot_callback, 10)
 
         # ── Publish timer ─────────────────────────────────────────────────
         self._publish_timer = self.create_timer(_PUBLISH_PERIOD, self._publish_cmd)
@@ -89,6 +90,8 @@ class VoiceNavigationNode(Node):
             f"angular_speed={voice_nav_cfg.get('angular_speed', 0.3):.3f}rad/s "
             f"debug_logging={self._debug_logging}"
         )
+
+        self._commanded_robot = None  # Last commanded robot from /commanded_robot topic
 
     # ── Subscription callbacks ────────────────────────────────────────────────
 
@@ -157,10 +160,19 @@ class VoiceNavigationNode(Node):
             self._maybe_log_angular_progress(now, counted)
         self._check_completion()
 
+    def _robot_callback(self, msg: String) -> None:
+        """Receive the last commanded robot from /commanded_robot topic."""
+        self._commanded_robot = msg.data.upper().strip()
+        self._logger.info(f"Received commanded robot: {self._commanded_robot}")
+
     # ── Timer callback ────────────────────────────────────────────────────────
 
     def _publish_cmd(self) -> None:
         """Stream /cmd_vel_speech at fixed rate while a primitive is active."""
+        if self._commanded_robot != "MILO":
+            self._logger.info(f"Commanded robot is not MILO ({self._commanded_robot}), stopping.")
+            self._publish_stop()
+            return;
         if not self._navigator.is_active():
             return
 
