@@ -12,53 +12,55 @@ SPIHandler spi_handler(40, 4);
 // -------------------------------------------------------
 // Pin Definitions
 // -------------------------------------------------------
-#define STEP_SHOULDER_R   14    // stepper1 - Shoulder Right
-#define DIR_SHOULDER_R    27
+#define STEP_SHOULDER     16    // shared STEP line — both shoulder drivers wired together in hardware
+#define DIR_SHOULDER_R    14    // AccelStepper-controlled DIR (Right)
+#define DIR_SHOULDER_L    15    // manually-controlled DIR (Left, inverse of R)
 
-#define STEP_SHOULDER_L   12    // stepper2 - Shoulder Left
-#define DIR_SHOULDER_L    15
+#define STEP_GEARED       18    // stepper3 - Geared shoulder (5.18:1)
+#define DIR_GEARED        17
 
-#define STEP_GEARED       33    // stepper3 - Geared shoulder (5.18:1)
-#define DIR_GEARED         4
+#define STEP_FOREARM      6     // stepper4 - Forearm
+#define DIR_FOREARM       2
 
-#define STEP_FOREARM      32    // stepper4 - Forearm
-#define DIR_FOREARM       16
+#define STEP_WRIST        5     // stepper5 - Wrist
+#define DIR_WRIST         1
 
-#define STEP_WRIST        26    // stepper5 - Wrist
-#define DIR_WRIST         25
+#define STEP_ROTATION     7     // stepper6 - Base Rotation
+#define DIR_ROTATION      4
 
-#define STEP_ROTATION     36    // stepper6 - Base Rotation
-#define DIR_ROTATION       2
-
-#define SERVO_PIN          13    // Gripper servo GPIO
+#define SERVO_PIN         21    // Gripper servo GPIO
 
 // ------------------------------------------------------------
 // Motor Speed & Acceleration
 // ------------------------------------------------------------
-// Microstepping = 16  →  3200 steps/rev (motor shaft)
-// Target ≈ 150 RPM  →  150 × 3200 / 60 = 8000 steps/s
-// Ramp to max in ~0.5s → 16000 steps/s²
-// ------------------------------------------------------------
 #define MICROSTEPS          16
 #define STEPS_PER_REV       (200 * MICROSTEPS)   // 3200
+
 #define SPEED_STANDARD   4000
-#define ACCEL_STANDARD   6000
+#define ACCEL_STANDARD   3000
+
+#define SPEED_FOREARM    8000
+#define ACCEL_FOREARM    6000
 
 #define SPEED_WRIST          300
-#define SPEED_ROTATION      6000
+#define SPEED_ROTATION      3000
 
 #define ACCEL_WRIST          600
-#define ACCEL_ROTATION     12000
+#define ACCEL_ROTATION     6000
 
 // -------------------------------------------------------
 // Stepper Motors
 // -------------------------------------------------------
-AccelStepper motorShoulderR (AccelStepper::DRIVER, STEP_SHOULDER_R, DIR_SHOULDER_R);
-AccelStepper motorShoulderL (AccelStepper::DRIVER, STEP_SHOULDER_L, DIR_SHOULDER_L);
-AccelStepper motorGeared    (AccelStepper::DRIVER, STEP_GEARED,     DIR_GEARED);
-AccelStepper motorForearm   (AccelStepper::DRIVER, STEP_FOREARM,    DIR_FOREARM);
-AccelStepper motorWrist     (AccelStepper::DRIVER, STEP_WRIST,      DIR_WRIST);
-AccelStepper motorRotation  (AccelStepper::DRIVER, STEP_ROTATION,   DIR_ROTATION);
+// motorShoulderR is the ONLY AccelStepper for the shoulder joint.
+// It owns STEP_SHOULDER and drives DIR_SHOULDER_R itself.
+// DIR_SHOULDER_L is toggled manually in actuatorTask (see below),
+// since AccelStepper only supports one DIR pin per instance and
+// the left driver always needs the OPPOSITE direction of the right.
+AccelStepper motorShoulderR (AccelStepper::DRIVER, STEP_SHOULDER, DIR_SHOULDER_R);
+AccelStepper motorGeared    (AccelStepper::DRIVER, STEP_GEARED,   DIR_GEARED);
+AccelStepper motorForearm   (AccelStepper::DRIVER, STEP_FOREARM,  DIR_FOREARM);
+AccelStepper motorWrist     (AccelStepper::DRIVER, STEP_WRIST,    DIR_WRIST);
+AccelStepper motorRotation  (AccelStepper::DRIVER, STEP_ROTATION, DIR_ROTATION);
 
 // -------------------------------------------------------
 // Gripper Servo
@@ -71,6 +73,10 @@ char lastGripperCmd = 0;
 // -------------------------------------------------------
 char cmd;
 float v1, v2;
+
+// Tracks the last DIR state written to DIR_SHOULDER_L so we only
+// touch the pin on an actual direction change, not every command.
+int lastShoulderDir = 0; // 0 = unset, 1 = forward, -1 = reverse
 
 // -------------------------------------------------------
 // Sensor data (IMU placeholders)
@@ -148,10 +154,23 @@ void actuatorTask(void* arg) {
                     prevSteps[0] = newSteps[0];
                 }
 
-                // Joint 2 → Shoulder (both motors, mirrored)
+                // Joint 2 → Shoulder (single shared STEP pin, mirrored DIR)
                 if (newSteps[1] != prevSteps[1]) {
-                    motorShoulderR.moveTo( 2*newSteps[1]);
-                    motorShoulderL.moveTo(-2*newSteps[1]);
+                    long target = 2L * newSteps[1];
+
+                    // Determine direction from where the R motor is
+                    // headed relative to where it currently is.
+                    int dir = (target >= motorShoulderR.currentPosition()) ? 1 : -1;
+
+                    if (dir != lastShoulderDir) {
+                        // Left driver always needs the OPPOSITE direction of Right.
+                        // Polarity (HIGH/LOW) depends on your driver wiring —
+                        // verify on the bench that L actually spins opposite to R.
+                        digitalWrite(DIR_SHOULDER_L, dir > 0 ? LOW : HIGH);
+                        lastShoulderDir = dir;
+                    }
+
+                    motorShoulderR.moveTo(target);
                     prevSteps[1] = newSteps[1];
                 }
 
@@ -205,19 +224,18 @@ void actuatorTask(void* arg) {
 // -------------------------------------------------------
 // stepperTask — continuously calls run() on all motors.
 // This is the ONLY place motors actually step.
+// motorShoulderR.run() pulses STEP_SHOULDER, which BOTH
+// shoulder drivers are wired to in hardware.
 // Runs on core 1.
 // -------------------------------------------------------
 void stepperTask(void* arg) {
     while (true) {
         motorRotation.run();
         motorShoulderR.run();
-        motorShoulderL.run();
         motorGeared.run();
         motorForearm.run();
         motorWrist.run();
 
-        // Minimal yield — run() must be called as fast as possible
-        // for smooth acceleration. taskYIELD is cheaper than vTaskDelay.
         taskYIELD();
     }
 }
@@ -232,20 +250,21 @@ void setup() {
     gripperServo.attach(SERVO_PIN);
     gripperServo.write(20);  // Start open
 
-    // Shoulder motors
+    // Manual DIR pin for Left shoulder driver
+    pinMode(DIR_SHOULDER_L, OUTPUT);
+    digitalWrite(DIR_SHOULDER_L, LOW);  // arbitrary initial state, corrected on first move
+
+    // Shoulder motor (Right — master, drives shared STEP pin)
     motorShoulderR.setMaxSpeed(SPEED_STANDARD);
     motorShoulderR.setAcceleration(ACCEL_STANDARD);
-
-    motorShoulderL.setMaxSpeed(SPEED_STANDARD);
-    motorShoulderL.setAcceleration(ACCEL_STANDARD);
 
     // Geared shoulder
     motorGeared.setMaxSpeed(7*SPEED_STANDARD);
     motorGeared.setAcceleration(7*ACCEL_STANDARD);
 
     // Forearm
-    motorForearm.setMaxSpeed(SPEED_STANDARD);
-    motorForearm.setAcceleration(ACCEL_STANDARD);
+    motorForearm.setMaxSpeed(SPEED_FOREARM);
+    motorForearm.setAcceleration(ACCEL_FOREARM);
 
     // Wrist — finer, slower
     motorWrist.setMaxSpeed(SPEED_WRIST);

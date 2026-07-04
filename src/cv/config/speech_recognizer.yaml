@@ -50,7 +50,7 @@ actions:
   - down
   - left
   - right
-  - backward
+  - back
   - forward
   - close
   - open

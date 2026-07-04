@@ -12,20 +12,16 @@ from tf_transformations import euler_from_quaternion
 import threading
 import time
 
-# Known grab targets (x, y, z in base_link frame)
 GRAB_TARGETS = {
     "coke_can":     {"x": 0.50, "y": 0.15, "z": 0.06},
     "red_cylinder": {"x": 0.22, "y": 0.12, "z": 0.20},
     "mustard":      {"x": 0.70, "y": 0.15, "z": 0.10},
-    "default":      {"x": 0.50, "y": 0.15, "z": 0.06},  #
+    "default":      {"x": 0.50, "y": 0.15, "z": 0.06},  
 }
 
-# Grasp orientation: end-effector pointing downward
 GRASP_ROLL, GRASP_PITCH, GRASP_YAW = 0.0, 1.57, 0.0
 
-# Minimum reachable z (metres) — prevents planning failures at surface level
 Z_MIN = 0.12
-# Small offset added so the arm approaches slightly above the object
 Z_PRE_GRASP_OFFSET = 0.04
 
 # Home position: exact physical values recorded from the real robot
@@ -40,12 +36,12 @@ GRAB_JOINTS = {
     },
     "default": {
         "pre_grasp": [-0.24, -0.20, -1.20, -0.48, 1.57, 0.0],
-        "grasp":     [-0.24, -0.48, -0.84, -0.48, 1.57, 0.0],
+        "grasp":     [-0.24, -0.56, -0.84, -0.48, 1.57, 0.0],
         "lift":      [-0.24, -0.20, -0.84, -0.48, 1.57, 0.0],
     },
 }
 
-# Gripper closed/open target positions (must match publish_gripper values)
+
 GRIPPER_OPEN = [0.05, -0.05]
 GRIPPER_CLOSED = [1.45, -1.40]
 
@@ -62,6 +58,8 @@ class ArmPoseNode(Node):
 
         # Subscribers
         self.command_sub_ = self.create_subscription(String, '/commanded_action', self.command_callback, 10)
+        self.robot_sub_ = self.create_subscription(String, '/commanded_robot', self.robot_callback, 10)
+        self._commanded_robot = None  # Track which robot was last commanded
         self.joint_state_sub_ = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
 
         self.camera_target_sub_ = self.create_subscription(
@@ -75,14 +73,12 @@ class ArmPoseNode(Node):
         self.joint_names = ['Joint_1','Joint_2','Joint_3','Joint_4','Joint_5','Joint_6']
         self.current_joints = [0.0]*6
         self.joint_states_received = False
-
-        # Gripper joint state tracking (needed for dynamic gripper-settle waits)
         self.gripper_joint_names = ['Gripper_Servo_Gear_Joint', 'Gripper_Idol_Gear_Joint']
         self.current_gripper = [0.0, 0.0]
         self.gripper_state_received = False
 
         self.step = 0.5
-        self.busy = False  # True while grab sequence is running
+        self.busy = False  
 
         # Predefined positions
         self.pos1 = self._quaternion_to_euler({"x":0.0109,"y":0.2385,"z":0.4557,"qx":0.1981,"qy":0.4774,"qz":0.7338,"qw":-0.44})
@@ -92,7 +88,6 @@ class ArmPoseNode(Node):
         self.startup_done = False
         self.startup_timer = self.create_timer(1.0, self.startup_home)
 
-        # Start keyboard input thread
         threading.Thread(target=self.keyboard_loop, daemon=True).start()
 
         self.get_logger().info(
@@ -141,7 +136,6 @@ class ArmPoseNode(Node):
     def joint_state_callback(self, msg: JointState):
         joint_dict = dict(zip(msg.name, msg.position))
 
-        # Arm joints
         all_found = True
         for i, name in enumerate(self.joint_names):
             if name in joint_dict:
@@ -151,7 +145,7 @@ class ArmPoseNode(Node):
         if all_found:
             self.joint_states_received = True
 
-        # Gripper joints
+     
         gripper_found = True
         for i, name in enumerate(self.gripper_joint_names):
             if name in joint_dict:
@@ -161,7 +155,14 @@ class ArmPoseNode(Node):
         if gripper_found:
             self.gripper_state_received = True
 
+    def robot_callback(self, msg: String):
+        self._commanded_robot = msg.data.upper().strip()
+        self.get_logger().info(f"Commanded robot: {self._commanded_robot}")
+
     def command_callback(self, msg: String):
+        # Only respond to commands when Jarvis is the active robot
+        if self._commanded_robot != "JARVIS":
+            return
         command = msg.data.lower()
         threading.Thread(target=self.handle_command, args=(command,), daemon=True).start()
 
@@ -321,7 +322,7 @@ class ArmPoseNode(Node):
             diff = max(abs(a - b) for a, b in zip(self.current_joints, last_joints))
             last_joints = list(self.current_joints)
 
-            if diff < 0.015:  # Very slow or no movement
+            if diff < 0.015:  
                 if settled_start is None:
                     settled_start = time.time()
                 elif time.time() - settled_start >= settle_time:
@@ -332,19 +333,7 @@ class ArmPoseNode(Node):
 
     def wait_for_gripper_to_settle(self, target_positions, tol=0.08, timeout=6.0,
                                     settle_time=0.5, vel_tol=0.01, require_reach=False):
-        """Waits dynamically until the gripper joints stop moving (velocity settled).
-
-        IMPORTANT: when actually grasping an object, the gripper will NOT reach
-        `target_positions` (the fully-closed value) — it physically stops early
-        against the object. So by default this only waits for movement to stop
-        (settle), not for the exact closed position to be reached. Set
-        require_reach=True if you want the old strict behaviour (e.g. for
-        closing on empty air / open-gripper calls).
-
-        Falls back gracefully (timeout) if gripper joint states are never
-        published (e.g. open-loop/real servo with no feedback) — in that
-        case this behaves like a plain timeout-based sleep.
-        """
+        
         if not self.gripper_state_received:
             self.get_logger().warn(
                 "No gripper joint state feedback received — falling back to fixed wait."
@@ -352,8 +341,6 @@ class ArmPoseNode(Node):
             time.sleep(timeout)
             return False
 
-        # Give the servo a brief moment to actually start moving before we
-        # start treating "not moving yet" as "already settled".
         start_pos = list(self.current_gripper)
         kickoff_start = time.time()
         while time.time() - kickoff_start < min(1.5, timeout):
@@ -392,43 +379,56 @@ class ArmPoseNode(Node):
         try:
             self.dynamic_target = None
             direction = 1
-            max_sweeps = 300  # Give it ample time (60 seconds)
-            sweeps = 0
-            # Step 0: Move to home position (straight up)
+            
+            # Step 0: Move to home position
             home_joints = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             self.get_logger().info("Step 0: Moving to home position...")
             self.publish_joints(home_joints, duration=1.0)
             self.wait_for_joints(home_joints, tol=0.1, timeout=4.0)
             time.sleep(0.5)
-            # Maintain a logical target state instead of reading lagging physical states!
+            
             scan_joints = list(self.current_joints)
 
-            while self.dynamic_target is None and sweeps < max_sweeps:
-                scan_joints[0] += direction * 0.2
+            scan_levels = [
+                {"duration": 20.0, "joints": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "name": "mid"},
+                {"duration": 20.0, "joints": [0.0, 0.0, 0.5, 0.0, 0.0, 0.0], "name": "upper"},
+                {"duration": 15.0, "joints": [0.0, -0.20, -1.20, -0.48, 1.57, 0.0], "name": "lower"}
+            ]
 
-                if scan_joints[0] >= 1.2:
-                    direction = -1
-                    scan_joints[0] = 1.2
-                elif scan_joints[0] <= -1.0:
-                    direction = 1
-                    scan_joints[0] = -1.0
+            for level in scan_levels:
+                if self.dynamic_target is not None:
+                    break
 
-                # Use a longer duration so the controller has time to ramp & settle
-                self.publish_joints(scan_joints, duration=0.5)
+                self.get_logger().info(f"Scanning at {level['name']} level for {level['duration']} seconds...")
                 
-                # Wait until /joint_states reports arrival (within tolerance)
-                self.wait_for_joints(scan_joints, tol=0.05, timeout=2.0)
+                target_base = list(level["joints"])
+                target_base[0] = scan_joints[0]
+                self.publish_joints(target_base, duration=1.0)
+                self.wait_for_joints(target_base, tol=0.1, timeout=4.0)
+                scan_joints = list(target_base)
                 
-                # Wait until the integer step values are stable for ≥450 ms so the
-                # Steppers node's 3-cycle stability filter (3 × 100 ms) can fire.
-                self.wait_for_steps_stable(timeout=2.0, stable_duration=0.45)
-                sweeps += 1
+                level_start_time = time.time()
+                while time.time() - level_start_time < level["duration"]:
+                    if self.dynamic_target is not None:
+                        break
+
+                    scan_joints[0] += direction * 0.2
+
+                    if scan_joints[0] >= 1.2:
+                        direction = -1
+                        scan_joints[0] = 1.2
+                    elif scan_joints[0] <= -1.0:
+                        direction = 1
+                        scan_joints[0] = -1.0
+
+                    self.publish_joints(scan_joints, duration=0.5)
+                    self.wait_for_joints(scan_joints, tol=0.05, timeout=2.0)
+                    self.wait_for_steps_stable(timeout=2.0, stable_duration=0.45)
 
             if self.dynamic_target is None:
-                self.get_logger().warn("Could not detect bottle or cup during scan.")
+                self.grab_sequence("red_cylinder", skip_home=True, start_from_pregrasp=True)
                 return
 
-            self.get_logger().info("Target detected. Stabilizing base before IK...")
             time.sleep(1.5)
 
             self.get_logger().info("Executing IK to target...")
@@ -454,7 +454,7 @@ class ArmPoseNode(Node):
         finally:
             self.busy = False
 
-    def grab_sequence(self, target_name="default"):
+    def grab_sequence(self, target_name="default", skip_home=False, start_from_pregrasp=False):
         """Joint-angle-based grab sequence.
         Uses direct joint commands — no MoveIt IK needed.
         """
@@ -464,24 +464,37 @@ class ArmPoseNode(Node):
         self.busy = True
 
         try:
-            # Step 0: Move to home position (straight up)
-            home_joints = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            self.get_logger().info("Step 0: Moving to home position...")
-            self.publish_joints(home_joints, duration=1.0)
-            self.wait_for_joints(home_joints, tol=0.1, timeout=4.0)
-            time.sleep(0.5)
+            if not skip_home and not start_from_pregrasp:
+                # Step 0: Move to home position (straight up)
+                home_joints = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.get_logger().info("Step 0: Moving to home position...")
+                self.publish_joints(home_joints, duration=1.0)
+                self.wait_for_joints(home_joints, tol=0.1, timeout=4.0)
+                time.sleep(0.5)
 
-            # Step 1: Open gripper
-            self.get_logger().info("Step 1: Opening gripper...")
-            self.publish_gripper(True, duration=0.5)
-            time.sleep(1.0)
+            if not start_from_pregrasp:
+                # Step 1: Open gripper
+                self.get_logger().info("Step 1: Opening gripper...")
+                self.publish_gripper(True, duration=0.5)
+                time.sleep(1.0)
 
-            # Step 2: Hover high up (safe position to avoid sweeping through objects)
-            safe_hover = [0.0, -0.6, -1.2, 0.0, 1.57, 0.0]
-            self.get_logger().info("Step 2: Moving to safe hover...")
-            self.publish_joints(safe_hover, duration=1.0)
-            self.wait_for_joints(safe_hover, tol=0.1, timeout=4.0)
-            time.sleep(0.5)
+                # Step 2: Hover high up (safe position to avoid sweeping through objects)
+                safe_hover = [0.0, -0.6, -1.2, 0.0, 1.57, 0.0]
+                self.get_logger().info("Step 2: Moving to safe hover...")
+                self.publish_joints(safe_hover, duration=1.0)
+                self.wait_for_joints(safe_hover, tol=0.1, timeout=4.0)
+                time.sleep(0.5)
+            else:
+                self.get_logger().info("Skipping Steps 0-2. Ensuring gripper is open...")
+                self.publish_gripper(True, duration=0.5)
+                time.sleep(0.5)
+
+                self.get_logger().info("Intermediate step: Moving left slightly before pre-grasp...")
+                clearance_joints = list(joints["pre_grasp"])
+                clearance_joints[0] += 0.40  # Move Joint_1 further left
+                
+                self.publish_joints(clearance_joints, duration=1.0)
+                self.wait_for_joints(clearance_joints, tol=0.1, timeout=3.0)
 
             # Step 3: Move to pre-grasp (above object)
             self.get_logger().info("Step 3: Moving to pre-grasp...")
@@ -491,14 +504,14 @@ class ArmPoseNode(Node):
 
             # Step 4: Descend to grasp
             self.get_logger().info("Step 4: Descending to grasp...")
-            self.publish_joints(joints["grasp"], duration=0.8)
+            self.publish_joints(joints["grasp"], duration=0.5)
             self.wait_for_joints(joints["grasp"], tol=0.1, timeout=3.5)
-            time.sleep(0.5)
+            time.sleep(0.1)
 
             # Step 5: Close gripper
             self.get_logger().info("Step 5: Closing gripper...")
-            self.publish_gripper(False, duration=1.0)
-            time.sleep(1.8)
+            self.publish_gripper(False, duration=0.6)
+            time.sleep(1.0)
 
             # Step 6: Lift straight up
             self.get_logger().info("Step 6: Lifting object straight up...")
