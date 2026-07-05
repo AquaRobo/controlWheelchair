@@ -288,6 +288,7 @@ class SpeechRecognizer:
 
         if wake_word == rob1:
             print(f"[SpeechRecognizer] {rob1} is now listening for a command")
+            first = True
             while True:
                 self._recording_command = True
                 audio = self._record_command()
@@ -295,12 +296,15 @@ class SpeechRecognizer:
                 print(f"Transcription: {transcription}")
                 room = self._getCommandedRoom(transcription)
                 action = self._getCommandedAction(transcription)
-                yield room, None, action, rob1
+                # Publish robot name only on first detection, not every command iteration
+                yield room, None, action, rob1 if first else None
+                first = False
                 if action == "exit command mode":
                     break
 
         elif wake_word == rob2:
             print(f"[SpeechRecognizer] {rob2} is now listening for a command")
+            first = True
             while True:
                 self._recording_command = True
                 audio = self._record_command()
@@ -308,7 +312,9 @@ class SpeechRecognizer:
                 print(f"Transcription: {transcription}")
                 obj = self._getCommandedObject(transcription)
                 action = self._getCommandedAction(transcription)
-                yield None, obj, action, rob2
+                # Publish robot name only on first detection, not every command iteration
+                yield None, obj, action, rob2 if first else None
+                first = False
                 if action == "exit command mode":
                     break
 

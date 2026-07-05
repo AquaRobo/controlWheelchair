@@ -55,6 +55,8 @@ actions:
   - close
   - open
   - lean
+  - cup
+  - bottle
   - level
   - raise
   - lower

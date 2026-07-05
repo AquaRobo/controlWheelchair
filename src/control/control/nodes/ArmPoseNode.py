@@ -174,7 +174,7 @@ class ArmPoseNode(Node):
 
         if command in ["grab", "grab default"]:
             self.grab_sequence("default")
-        elif command == "water":
+        elif command in ["water", "cup", "bottle"]:
             threading.Thread(target=self.water_scan_sequence, daemon=True).start()
         elif command in ["first position", "pos1"]:
             self.move_to_pose(self.pos1)
