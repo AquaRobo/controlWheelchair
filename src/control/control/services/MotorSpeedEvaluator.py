@@ -15,7 +15,7 @@ class MotorSpeedEvaluator:
         self.front_wheels_separation = self.robot_config['front_wheels_separation']
         self.rear_speed_conversion = np.array([
             [self.rear_wheels_radius/2.0, self.rear_wheels_radius/2.0],
-            [self.rear_wheels_radius/self.rear_wheels_separation, -self.rear_wheels_radius/self.rear_wheels_separation]
+            [-self.rear_wheels_radius/self.rear_wheels_separation, self.rear_wheels_radius/self.rear_wheels_separation]
         ], dtype=float)
         self._half_front_track = self.front_wheels_separation / 2.0
         

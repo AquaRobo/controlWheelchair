@@ -43,9 +43,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0.0354 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://my_robot_description/meshes/rb_link.STL" />
+        <cylinder radius="0.0983" length="0.0306" />
       </geometry>
     </collision>
   </link>
@@ -73,9 +73,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 -0.0354 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://my_robot_description/meshes/lb_link.STL" />
+        <cylinder radius="0.0983" length="0.0306" />
       </geometry>
     </collision>
   </link>
@@ -89,9 +89,9 @@
 
   <link name="rcaster_link">
     <inertial>
-      <origin xyz="0.0084911 6.2993E-08 -0.020801" rpy="0 0 0" />
+      <origin xyz="0.0084911 -6.2993E-08 -0.020801" rpy="0 0 0" />
       <mass value="0.066356" />
-      <inertia ixx="0.00015145" ixy="-3.706E-11" ixz="3.0557E-05" iyy="0.00014025" iyz="-3.2899E-11" izz="4.1434E-05" />
+      <inertia ixx="0.00015145" ixy="-3.8993E-11" ixz="3.0557E-05" iyy="0.00014025" iyz="-4.9722E-11" izz="4.1434E-05" />
     </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -111,17 +111,20 @@
   </link>
 
   <joint name="rcaster_joint" type="continuous">
-    <origin xyz="-0.2159 -0.31274 0.2032" rpy="0 0 -1.5414" />
+    <origin xyz="-0.2159 -0.31274 0.2032" rpy="0 0 -1.6081" />
     <parent link="base_link" />
     <child link="rcaster_link" />
-    <axis xyz="0 0 -1" />
+    <axis xyz="0 0 1" />
+    <dynamics damping="0.3" friction="0.0" />
   </joint>
 
+  <!-- The exported rcaster_wheel data (mesh, axis, inertia) was corrupted mid-swivel;
+       the right wheel is the same physical part as the left, so reuse the clean left-wheel data. -->
   <link name="rcaster_wheel_link">
     <inertial>
-      <origin xyz="-0.00088601 0.030149 -1.1102E-16" rpy="0 0 0" />
+      <origin xyz="0 -0.030162 0" rpy="0 0 0" />
       <mass value="0.29095" />
-      <inertia ixx="0.00088078" ixy="-2.4602E-05" ixz="-4.4595E-19" iyy="0.0017172" iyz="3.2164E-20" izz="0.00088006" />
+      <inertia ixx="0.00088006" ixy="5.1838E-19" ixz="3.4931E-21" iyy="0.001718" iyz="-4.8105E-20" izz="0.00088006" />
     </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -133,18 +136,19 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 -0.030162 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://my_robot_description/meshes/rcaster_wheel_link.STL" />
+        <cylinder radius="0.09525" length="0.0539" />
       </geometry>
     </collision>
   </link>
 
   <joint name="rcaster_wheel_joint" type="continuous">
-    <origin xyz="0.0508 -0.030163 -0.10795" rpy="0 0 -0.029379" />
+    <origin xyz="0.0508 0.030163 -0.10795" rpy="0 0 0" />
     <parent link="rcaster_link" />
     <child link="rcaster_wheel_link" />
-    <axis xyz="0.029375 0.99957 0" />
+    <axis xyz="0 1 0" />
+    <dynamics damping="0.01" friction="0.0" />
   </joint>
 
   <link name="lcaster_link">
@@ -175,6 +179,7 @@
     <parent link="base_link" />
     <child link="lcaster_link" />
     <axis xyz="0 0 -1" />
+    <dynamics damping="0.3" friction="0.0" />
   </joint>
 
   <link name="lcaster_wheel_link">
@@ -193,9 +198,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 -0.030162 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://my_robot_description/meshes/lcaster_wheel_link.STL" />
+        <cylinder radius="0.09525" length="0.0539" />
       </geometry>
     </collision>
   </link>
@@ -205,6 +210,7 @@
     <parent link="lcaster_link" />
     <child link="lcaster_wheel_link" />
     <axis xyz="0 1 0" />
+    <dynamics damping="0.01" friction="0.0" />
   </joint>
 
 </robot>

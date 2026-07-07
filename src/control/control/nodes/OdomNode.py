@@ -1,6 +1,5 @@
 import math
 import rclpy
-from rclpy.time import Time
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
@@ -17,12 +16,13 @@ class OdomNode(Node):
         self.robot_config = Configurator("control").fetchData(Configurator.WHEELCHAIR_CONFIG)
         self.rear_wheel_radius = self.robot_config['rear_wheels_radius']
         self.rear_wheel_separation = self.robot_config['rear_wheels_separation']
-
         self.rear_left_wheel_prev_pos = 0.0
         self.rear_right_wheel_prev_pos = 0.0
+        self._have_prev_joint_state = False
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
+        self.q = quaternion_from_euler(0, 0, self.theta)
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.joint_sub = self.create_subscription(JointState, 'joint_states', self._jointCallback, 10)
@@ -37,28 +37,40 @@ class OdomNode(Node):
         self.odom_msg.pose.pose.orientation.z = 0.0
         self.odom_msg.pose.pose.orientation.w = 1.0
 
-        # self.br = TransformBroadcaster(self)
-        # self.transform_stamped = TransformStamped()
-        # self.transform_stamped.header.frame_id = "odom"
-        # self.transform_stamped.child_frame_id = "base_footprint"
+        self.br = TransformBroadcaster(self)
+        self.transform_stamped = TransformStamped()
+        self.transform_stamped.header.frame_id = "odom"
+        self.transform_stamped.child_frame_id = "base_footprint"
 
         self.prev_time = self.get_clock().now()
         
     def _jointCallback(self, msg: JointState) -> None:
         joint_names_index = {n: i for i, n in enumerate(msg.name)}
-        dp_rear_left = msg.position[joint_names_index['lb_joint']] - self.rear_left_wheel_prev_pos
-        dp_rear_right = msg.position[joint_names_index['rb_joint']] - self.rear_right_wheel_prev_pos 
-        dt = Time.from_msg(msg.header.stamp) - self.prev_time
+        rear_left_pos = msg.position[joint_names_index['lb_joint']]
+        rear_right_pos = msg.position[joint_names_index['rb_joint']]
+        now = self.get_clock().now()
 
+        if not self._have_prev_joint_state:
+            self.rear_left_wheel_prev_pos = rear_left_pos
+            self.rear_right_wheel_prev_pos = rear_right_pos
+            self.prev_time = now
+            self._have_prev_joint_state = True
+            return
+
+        dp_rear_left = rear_left_pos - self.rear_left_wheel_prev_pos
+        dp_rear_right = rear_right_pos - self.rear_right_wheel_prev_pos
+        dt = now - self.prev_time
+
+        self._logger.info(f"now={now.nanoseconds} prev={self.prev_time.nanoseconds} dt={dt.nanoseconds}")
         # guard against zero/negative dt
-        if dt.nanoseconds <= 0.0:
-            self._logger.warn(f"Non-positive dt: {dt}. Skipping update.")
+        if dt.nanoseconds <= 0:
+            self._logger.warn(f"Non-positive dt: {dt.nanoseconds} ns. Skipping update.")
             return
 
         # Actualize the prev pose for the next iteration
-        self.rear_left_wheel_prev_pos = msg.position[joint_names_index['lb_joint']]
-        self.rear_right_wheel_prev_pos = msg.position[joint_names_index['rb_joint']]
-        self.prev_time = Time.from_msg(msg.header.stamp)
+        self.rear_left_wheel_prev_pos = rear_left_pos
+        self.rear_right_wheel_prev_pos = rear_right_pos
+        self.prev_time = now
 
         fi_rear_left, fi_rear_right = OdometryEvaluator.getRotationalSpeeds(dp_rear_left, dp_rear_right, dt.nanoseconds)
         linear_vel, angular_vel = OdometryEvaluator.getRobotVelocities(fi_rear_left, fi_rear_right, self.rear_wheel_radius, self.rear_wheel_separation)
@@ -69,29 +81,31 @@ class OdomNode(Node):
         self.y += d_s * math.sin(self.theta)
 
         # Compose the odom message (published by timer at 20 Hz)
-        q = quaternion_from_euler(0, 0, self.theta)
-        self.odom_msg.header.stamp = self.get_clock().now().to_msg()
+        self.q = quaternion_from_euler(0, 0, self.theta)
+        stamp = self.get_clock().now().to_msg()
+        self.odom_msg.header.stamp = stamp
         self.odom_msg.pose.pose.position.x = self.x
         self.odom_msg.pose.pose.position.y = self.y
-        self.odom_msg.pose.pose.orientation.x = q[0]
-        self.odom_msg.pose.pose.orientation.y = q[1]
-        self.odom_msg.pose.pose.orientation.z = q[2]
-        self.odom_msg.pose.pose.orientation.w = q[3]
+        self.odom_msg.pose.pose.orientation.x = self.q[0]
+        self.odom_msg.pose.pose.orientation.y = self.q[1]
+        self.odom_msg.pose.pose.orientation.z = self.q[2]
+        self.odom_msg.pose.pose.orientation.w = self.q[3]
         self.odom_msg.twist.twist.linear.x = linear_vel
         self.odom_msg.twist.twist.angular.z = -angular_vel
 
+        # TF
+        self.transform_stamped.transform.translation.x = self.x
+        self.transform_stamped.transform.translation.y = self.y
+        self.transform_stamped.transform.rotation.x = self.q[0]
+        self.transform_stamped.transform.rotation.y = self.q[1]
+        self.transform_stamped.transform.rotation.z = self.q[2]
+        self.transform_stamped.transform.rotation.w = self.q[3]
+        self.transform_stamped.header.stamp = stamp
+        
     def _publishOdom(self) -> None:
         self.odom_pub.publish(self.odom_msg)
+        self.br.sendTransform(self.transform_stamped)
 
-        # TF
-        # self.transform_stamped.transform.translation.x = self.x
-        # self.transform_stamped.transform.translation.y = self.y
-        # self.transform_stamped.transform.rotation.x = q[0]
-        # self.transform_stamped.transform.rotation.y = q[1]
-        # self.transform_stamped.transform.rotation.z = q[2]
-        # self.transform_stamped.transform.rotation.w = q[3]
-        # self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
-        # self.br.sendTransform(self.transform_stamped)
         
 
 def main(args=None):

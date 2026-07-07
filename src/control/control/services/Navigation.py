@@ -18,6 +18,7 @@ class Navigation:
         # self.steering_strat.steer(self.motors_dict)
         PWMMapper().mapAxesToPWM(self.motors_dict)
         for motor_name, motor in self.motors_dict.items():
+            motor.current_speed = self.smoothing_strat.smooth(motor.current_speed, motor.target_speed)
             target_pwm = motor.target_pwm
             smoothed_pwm = self.smoothing_strat.smooth(motor.current_pwm, target_pwm)
             motor.current_pwm = smoothed_pwm
@@ -25,7 +26,7 @@ class Navigation:
     def getMotorsSpeed(self):
         speeds = []
         for motor_name, motor in self.motors_dict.items():
-            speeds.append(motor.target_speed)
+            speeds.append(motor.current_speed)
         return speeds
 
     def getMotorsPWM(self):

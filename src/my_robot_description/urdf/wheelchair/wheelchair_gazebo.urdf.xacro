@@ -2,57 +2,57 @@
 <robot name="wheel_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <!-- Wheels -->
     <gazebo reference="rb_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
         <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <gazebo reference="lb_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
         <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <gazebo reference="rcaster_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
         <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <gazebo reference="rcaster_wheel_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
         <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <gazebo reference="lcaster_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
-        <fdir1>0 0 1</fdir1>
+        <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <gazebo reference="lcaster_wheel_link">
-        <mu1>1000000000000000.0</mu1>
-        <mu2>1000000000000000.0</mu2>
-        <kp>1000000000000.0</kp>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <kp>1000000.0</kp>
         <kd>10.0</kd>
         <minDepth>0.001</minDepth>
-        <fdir1>0 0 1</fdir1>
+        <fdir1>1 0 0</fdir1>
     </gazebo>
 
     <!-- Gazebo Plugins -->
@@ -65,5 +65,5 @@
             <render_engine>ogre2</render_engine>
         </plugin>
     </gazebo>
-        
+
 </robot>
