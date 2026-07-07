@@ -44,6 +44,30 @@ GRAB_JOINTS = {
 
 
 class ArmPoseNode(Node):
+    """High-level arm command interface: text commands to arm/gripper motion.
+
+    Translates voice/text commands into either direct joint trajectories
+    (incremental jogs, scripted grab sequences) or pose goals forwarded to
+    ArmCommander. Also accepts camera object detections as dynamic grab
+    targets, and runs a keyboard input thread for manual testing.
+
+    Subscriptions:
+        /commanded_action (std_msgs/String): commands such as up/down/left/
+            right/forward/back, grab, water, open/close, first/second position.
+        /joint_states (sensor_msgs/JointState): current joint positions used
+            for incremental moves and to wait for motion completion.
+        /base_link/object_detection (my_robot_interfaces/ObjectDetection):
+            object position in base_link frame, stored as the 'water' target.
+
+    Publications:
+        arm_controller/joint_trajectory (trajectory_msgs/JointTrajectory):
+            direct joint commands (Joint_6 forced to 0 for the 5-DOF arm).
+        gripper_controller/joint_trajectory (trajectory_msgs/JointTrajectory):
+            gripper open/close commands.
+        pose_command (my_robot_interfaces/PoseCommand): Cartesian pose goals
+            consumed by ArmCommander.
+    """
+
     def __init__(self):
         super().__init__('arm_pose_node')
 

@@ -2,6 +2,21 @@ from utils.Configurator import Configurator
 import time
 
 class JoystickPostProcessors:
+    """Singleton joystick input processor with debounced button detection.
+
+    Normalizes raw sensor_msgs/Joy data into named buttons/axes (PS-style
+    layout: x/o/tri/rect, L1/R1, D-pad from axes 6/7) and exposes semantic
+    button names (e.g. MAP_SAVE, KITCHEN_SAVE) mapped from
+    joystick_buttons.yaml as class constants. Shared by MapSaverNode and
+    RoomPoseSaverNode — the singleton means one node's Joy callback can feed
+    every consumer.
+
+    Input:  updateData(buttons_data, axis_data) from a Joy message.
+    Output: isPressed(name) — press count within a time window while held;
+            isClicked(name) — rising-edge count reported once per window;
+            getAxis() — dict of stick/trigger axis values.
+    """
+
     _instance = None
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:  # Ensure a single instance

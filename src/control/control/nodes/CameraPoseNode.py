@@ -14,6 +14,26 @@ from my_robot_interfaces.msg import ObjectDetection
 
 
 class CameraPoseNode(Node):
+    """Transforms camera object detections into the robot base frame.
+
+    Takes detections expressed in the camera optical frame and re-expresses
+    their position in the target frame via TF2, so downstream consumers
+    (e.g. ArmPoseNode grab targets) can work in base_link coordinates.
+    Detections are dropped with a warning if the transform is unavailable.
+
+    Parameters:
+        target_frame (string, default 'base_link'): frame to transform into.
+        source_frame (string, default 'lsm36156_left_optical_frame'): camera frame.
+        tf_timeout (double, default 0.5): TF lookup timeout in seconds.
+
+    Subscriptions:
+        /object_detection (my_robot_interfaces/ObjectDetection): detection with
+            object position in the camera frame.
+
+    Publications:
+        /base_link/object_detection (my_robot_interfaces/ObjectDetection):
+            same detection with position re-expressed in target_frame.
+    """
 
     def __init__(self):
         super().__init__('camera_pose_node')

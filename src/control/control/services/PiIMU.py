@@ -12,6 +12,19 @@ from adafruit_bno08x import (
 from adafruit_bno08x.i2c import BNO08X_I2C
 
 class IMU:
+    """Driver for a BNO08x IMU wired directly to the Raspberry Pi over I2C.
+
+    Enables the accelerometer, gyroscope, magnetometer and rotation-vector
+    reports on the sensor and exposes them through simple getters. Also
+    provides interactive calibration helpers. Used by PiIMUNode.
+
+    Input:  BNO08x sensor at the given I2C address (default 0x4b) via
+            board SCL/SDA at 400 kHz.
+    Output: get_rotation() quaternion (i, j, k, real), get_gyro() [rad/s],
+            get_acceleration() [m/s²], get_magnetometer() [µT],
+            get_euler_angles() (roll, pitch, yaw).
+    """
+
     def __init__ (self, address = 0x4b):
         self.i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
         self.bno = BNO08X_I2C(self.i2c, address=address)

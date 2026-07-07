@@ -6,6 +6,18 @@ from control.interfaces.IIMU import IIMU
 
 @implementer(IIMU)
 class IMU:
+    """Reads IMU data from the ESP over the configured communication channel.
+
+    Implements IIMU. Each update() reads one packet of 10 little-endian floats
+    from the ESP handler (SPI): quaternion [x,y,z,w], linear acceleration
+    [x,y,z] in m/s², angular velocity [x,y,z] in rad/s. Getters return the last
+    stored sample (identity/zeros before the first update). Used by IMUNode.
+
+    Input:  raw byte frames from the "ESP" communication handler.
+    Output: getOrientation(), getLinearAcceleration(), getAngularVelocity(),
+            getEulerAngles() [deg].
+    """
+
     def __init__(self):
         self.__commHandler = Dispatcher().get_communication_handler("ESP")
         self._fmt = '<' + 'f' * 10 # 4 floats for orientation (quaternion), 3 for angular velocity, and 3 for linear acceleration

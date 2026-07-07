@@ -10,6 +10,24 @@ from tf_transformations import quaternion_from_euler
 from control.services.OdometryEvaluator import OdometryEvaluator
 
 class OdomNode(Node):
+    """Wheel odometry from joint states (simulation variant).
+
+    Integrates rear-wheel joint positions into a 2D pose (x, y, theta) using the
+    differential-drive model in OdometryEvaluator, with wheel radius/separation
+    read from wheelchair_config.yaml.
+
+    Subscriptions:
+        joint_states (sensor_msgs/JointState): wheel joint positions; uses
+            'lb_joint' and 'rb_joint' (rear left/right).
+
+    Publications:
+        odom (nav_msgs/Odometry): pose + twist in the 'odom' frame,
+            child frame 'base_footprint', published at 20 Hz.
+
+    TF broadcasts:
+        odom -> base_footprint transform at 20 Hz.
+    """
+
     def __init__(self):
         super().__init__('odom_node')
         self._logger = self.get_logger()

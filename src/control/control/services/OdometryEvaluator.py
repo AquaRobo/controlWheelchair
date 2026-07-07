@@ -1,5 +1,17 @@
 class OdometryEvaluator:
-    
+    """Stateless differential-drive odometry math (rear-wheel model).
+
+    Pure static helpers shared by OdomNode and OdomHardwareNode:
+    wheel position deltas -> wheel rotational speeds -> robot linear/angular
+    velocity and pose increments. Only the rear (driven) wheels are used, so
+    the model matches MotorSpeedEvaluator's command kinematics.
+
+    Input:  wheel angular displacements [rad], dt [ns], wheel radius and
+            separation [m].
+    Output: (fi_left, fi_right) [rad/s], (linear, angular) robot velocities
+            [m/s, rad/s], (d_s, d_theta) pose increments [m, rad].
+    """
+
     @staticmethod
     def getRotationalSpeeds(dp_left: float, dp_right: float, dt: float) -> tuple[float, float]:
         """Calculate the rotational speeds of the left and right wheels.

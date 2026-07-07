@@ -5,6 +5,20 @@ from utils.Dispatcher import Dispatcher
 from utils.Configurator import Configurator
 
 class Navigation:
+    """Drive pipeline service: velocity command in, wheel speeds/PWM out.
+
+    Orchestrates one navigation step for NavigationNode: the speed evaluator
+    computes per-wheel target speeds from (x, z, yaw) inputs, PWMMapper converts
+    them to hoverboard PWM values, and the configured smoothing strategy ramps
+    current speed/PWM toward the targets. Motor definitions are loaded from
+    motors.yaml; steering/smoothing strategies come from the Dispatcher.
+
+    Input:  x_axis (linear vel), z_axis (angular vel), yaw_axis (PID correction)
+            via navigate().
+    Output: getMotorsSpeed() — smoothed wheel speeds [rad/s] for simulation;
+            getMotorsPWM() — smoothed (right, left) PWM for the hardware driver.
+    """
+
     def __init__(self, speed_evaluator: ISpeedEvaluator):
         motors_yaml_data = Configurator("control").fetchData(Configurator.MOTORS)
         self.speed_evaluator = speed_evaluator

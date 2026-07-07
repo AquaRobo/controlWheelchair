@@ -1,6 +1,18 @@
 from utils.Configurator import Configurator
 
 class RoomPoseSaver:
+    """Persists named room poses to room_poses.yaml.
+
+    Thin persistence service used by RoomPoseSaverNode: keeps the room-pose
+    dictionary in memory and writes it back through the Configurator whenever
+    a pose is updated. AutoNavNode reads the same file to resolve navigation
+    goals.
+
+    Input:  room name plus position (x, y) and orientation quaternion via
+            updatePose().
+    Output: updated room_poses.yaml config file.
+    """
+
     def __init__(self):
         self.configurator = Configurator("control")
         self.room_poses = self.configurator.fetchData(Configurator.ROOM_POSES)

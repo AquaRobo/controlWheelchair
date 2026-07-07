@@ -4,6 +4,17 @@ from sensor_msgs.msg import Imu
 from control.services.IMU import IMU
 
 class IMUNode(Node):
+    """Publishes IMU data received from the ESP over SPI.
+
+    Polls the IMU service (which unpacks 10 floats from the ESP: quaternion,
+    linear acceleration, angular velocity) at 10 Hz and republishes it as a
+    standard ROS Imu message stamped in the 'imu_link' frame.
+
+    Publications:
+        imu (sensor_msgs/Imu): orientation, angular velocity and linear
+            acceleration at 10 Hz.
+    """
+
     def __init__(self):
         super().__init__('imu_node')
         self._logger = self.get_logger()

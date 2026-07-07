@@ -6,6 +6,17 @@ import numpy as np
 
 @implementer(ISpeedEvaluator)
 class MotorSpeedEvaluator:
+    """Inverse kinematics: robot velocity to per-wheel angular speeds.
+
+    Implements ISpeedEvaluator for the differential-drive wheelchair. Solves the
+    rear (driven) wheel speeds from the commanded linear/angular velocity, and
+    computes matching speeds for the passive front casters at their track
+    positions. A PID yaw correction is folded into the angular velocity before
+    solving. Wheel geometry is read from wheelchair_config.yaml.
+
+    Input:  x_axis [m/s], z_axis [rad/s], yaw_axis (PID output), motors_dict.
+    Output: sets motor.target_speed [rad/s] on every motor in motors_dict.
+    """
 
     def __init__(self):
         self.robot_config = Configurator("control").fetchData(Configurator.WHEELCHAIR_CONFIG)

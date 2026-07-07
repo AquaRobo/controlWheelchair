@@ -11,6 +11,24 @@ import numpy as np
 import rclpy
 
 class NavigationNode(Node):
+    """Main drive node: converts velocity commands into wheel speeds and PWM.
+
+    Runs a 10 Hz control loop that feeds cmd_vel through the Navigation service
+    (kinematics + smoothing + PWM mapping). When driving straight, it latches the
+    current IMU yaw as a heading setpoint and uses a PID controller
+    (gains from pid_params.yaml) to correct drift.
+
+    Subscriptions:
+        cmd_vel (geometry_msgs/Twist): commanded linear.x and angular.z velocity.
+        imu (sensor_msgs/Imu): orientation used to extract yaw for heading hold.
+
+    Publications:
+        /simple_velocity_controller/commands (std_msgs/Float64MultiArray):
+            per-wheel angular speeds for the simulation velocity controller.
+        /motor_speeds (my_robot_interfaces/MotorSpeeds): right/left PWM values
+            for the hardware driver (HoverBoardNode).
+    """
+
     def __init__(self):
         super().__init__('navigation_node')
         self.pid_params = Configurator("control").fetchData(Configurator.PID_PARAMS)

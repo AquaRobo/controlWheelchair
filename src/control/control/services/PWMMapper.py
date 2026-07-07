@@ -2,6 +2,16 @@
 from control.DTOs.motors import Motors
 
 class PWMMapper:
+    """Maps wheel target speeds to hoverboard PWM values.
+
+    Linearly scales each motor's target_speed (bounded by the motor's
+    min_rpm/max_rpm from motors.yaml) into the hoverboard PWM range
+    (±min_speed..±max_speed, e.g. ±300..±800), preserving sign and mapping
+    zero speed to zero PWM. Raises ValueError if a speed is out of range.
+
+    Input:  motors_dict with target_speed set (by MotorSpeedEvaluator).
+    Output: sets motor.target_pwm on each motor in place.
+    """
 
     @staticmethod
     def mapAxesToPWM(motors:dict[str, Motors]) -> None:

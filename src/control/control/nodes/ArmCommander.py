@@ -61,6 +61,26 @@ ROBOT_CONFIG = {
 }
 
 class ArmCommander(Node):
+    """MoveIt-based motion planner/executor for the 6-joint arm and gripper.
+
+    Wraps MoveItPy with the my_robot_moveit_config setup (OMPL pipeline) and
+    executes planned trajectories on the arm/gripper controllers. The physical
+    arm is 5-DOF, so Joint_6 is forced to zero in every planned trajectory.
+    Pose goals that fail IK fall back to an approximate joint-space solution.
+
+    Subscriptions:
+        open_gripper (example_interfaces/Bool): True opens the gripper,
+            False closes it (planned via SRDF named states).
+        joint_command (example_interfaces/Float64MultiArray): 6 joint angles
+            [rad] to plan and move to.
+        pose_command (my_robot_interfaces/PoseCommand): end-effector target
+            (x, y, z, roll, pitch, yaw) in the base_link frame.
+
+    Outputs:
+        Executes trajectories through MoveIt on the 'arm_controller' and
+        'gripper_controller' (no direct topic publications).
+    """
+
     def __init__(self):
         super().__init__("arm_commander")
         

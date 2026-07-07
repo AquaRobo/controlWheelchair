@@ -8,6 +8,20 @@ FEEDBACK_FMT = '<HhhhhHhHH'
 FEEDBACK_SIZE = struct.calcsize(FEEDBACK_FMT)
 
 class HoverBoardNode(Node):
+    """Hardware bridge between ROS and the hoverboard motor controller (UART).
+
+    Forwards PWM commands to the hoverboard main board via MotorDriver and reads
+    back the 18-byte feedback frame (measured wheel speeds, battery, temperature),
+    republishing the wheel speeds as encoder feedback.
+
+    Subscriptions:
+        /motor_speeds (my_robot_interfaces/MotorSpeeds): right/left PWM commands.
+
+    Publications:
+        /encoders (my_robot_interfaces/Encoders): measured right/left wheel speeds
+            in RPM, parsed from the hoverboard feedback frame (0.0 on parse error).
+    """
+
     def __init__(self):
         super().__init__('hoverboard_node')
         self._logger = self.get_logger()

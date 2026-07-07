@@ -8,6 +8,21 @@ from nav2_msgs.action import NavigateToPose
 from utils.Configurator import Configurator
 
 class AutoNavNode(Node):
+    """Sends Nav2 goals to drive the wheelchair to named rooms.
+
+    Listens for a room name, looks up its saved pose in room_poses.yaml
+    (written by RoomPoseSaverNode), and sends it as a NavigateToPose action
+    goal in the 'map' frame. A new room command preempts (cancels) any goal
+    that is still in flight.
+
+    Subscriptions:
+        commanded_room (std_msgs/String): target room name; must match a key
+            in room_poses.yaml.
+
+    Action clients:
+        navigate_to_pose (nav2_msgs/NavigateToPose): Nav2 navigation server.
+    """
+
     def __init__(self):
         super().__init__('auto_nav_node')
         self._logger = self.get_logger()

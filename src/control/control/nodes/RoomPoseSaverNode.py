@@ -7,6 +7,25 @@ from control.services.RoomPoseSaver import RoomPoseSaver
 from control.services.JoystickPostProcessors import JoystickPostProcessors
 
 class RoomPoseSaverNode(Node):
+    """Saves the chair's current pose as a named room via joystick buttons.
+
+    Tracks the latest odometry pose and, when a room-save button is pressed
+    (KITCHEN_SAVE, BEDROOM_SAVE, ... from joystick_buttons.yaml), writes the
+    pose into room_poses.yaml through RoomPoseSaver. GENERAL_ROOM_SAVE stores
+    the pose under the name last received on the room_name topic. Saved poses
+    are later used as navigation goals by AutoNavNode.
+
+    Subscriptions:
+        joy (sensor_msgs/Joy): joystick buttons, debounced by
+            JoystickPostProcessors.
+        odom (nav_msgs/Odometry): current pose (x, y, yaw quaternion z/w).
+        room_name (std_msgs/String): room label for the general save button;
+            "UNKNOWN" is ignored.
+
+    Outputs:
+        Updates room_poses.yaml via RoomPoseSaver (no ROS publications).
+    """
+
     def __init__(self):
         super().__init__('room_pose_saver_node')
         self._logger = self.get_logger()

@@ -1,7 +1,18 @@
 from simple_pid import PID
 
 class PIDController:
-    """A simple PID controller wrapper using the simple-pid library."""
+    """PID controller wrapper (simple-pid) for cyclic-angle stabilization.
+
+    Used by NavigationNode for yaw heading hold. Computes the error as the
+    shortest angular difference (handles the IMU's cyclic [-180, 180]° range)
+    and clamps the output to [-1, 1] to match the robot's angular velocity
+    command range.
+
+    Input:  gains (kp, ki, kd), a setpoint [deg] via updateSetpoint(), and the
+            measured angle [deg] via stablize().
+    Output: stablize() returns the control signal in [-1, 1] (the yaw_axis fed
+            into MotorSpeedEvaluator).
+    """
     def __init__(self, kp: float, ki: float, kd: float, setpoint: float = None):
         self.setpoint = setpoint
         self.kp = kp

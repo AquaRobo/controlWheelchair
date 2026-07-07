@@ -6,6 +6,22 @@ from slam_toolbox.srv import SaveMap, SerializePoseGraph
 from control.services.JoystickPostProcessors import JoystickPostProcessors
 
 class MapSaverNode(Node):
+    """Saves the SLAM Toolbox map when a joystick button is pressed.
+
+    Watches the joystick for the MAP_SAVE button (mapping from
+    joystick_buttons.yaml) at 2 Hz and, when pressed, requests both a
+    serialized pose graph and a map YAML/PGM from SLAM Toolbox, written to
+    a fixed path (self.map_name).
+
+    Subscriptions:
+        joy (sensor_msgs/Joy): joystick buttons/axes, debounced by
+            JoystickPostProcessors.
+
+    Service clients:
+        /slam_toolbox/serialize_map (slam_toolbox/SerializePoseGraph)
+        /slam_toolbox/save_map (slam_toolbox/SaveMap)
+    """
+
     def __init__(self):
         super().__init__('map_saver_node')
         self._logger = self.get_logger()

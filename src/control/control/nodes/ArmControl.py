@@ -6,6 +6,23 @@ from sensor_msgs.msg import JointState
 from utils.Dispatcher import Dispatcher
 
 class Steppers(Node):
+    """Streams arm joint targets to the stepper drivers over SPI.
+
+    Mirrors /joint_states (Joint_1..Joint_6) into stepper step counts
+    (200 steps/rev × 16 microstepping) and sends them to the ESP via the
+    SPI communication handler. A packet is only transmitted after it has
+    been stable for 3 consecutive 100 ms cycles and differs from the last
+    sent packet, so intermediate trajectory points are skipped and only the
+    settled target reaches the hardware. Joint_6 is always sent as 0 (5-DOF arm).
+
+    Subscriptions:
+        /joint_states (sensor_msgs/JointState): current arm joint positions.
+
+    Outputs:
+        SPI packet ['s', step_1..step_6] to the ESP stepper controller
+        (no ROS publications).
+    """
+
     def __init__(self):
         super().__init__('Steppers')
 

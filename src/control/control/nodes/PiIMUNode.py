@@ -5,6 +5,17 @@ from control.services.PiIMU import IMU
 
 
 class PiIMUNode(Node):
+    """Publishes IMU data from a BNO08x connected directly to the Pi over I2C.
+
+    Alternative to IMUNode for setups where the IMU is wired to the Raspberry Pi
+    instead of the ESP. Reads quaternion, gyro and accelerometer from the PiIMU
+    service at 20 Hz and republishes them stamped in the 'imu_link' frame.
+
+    Publications:
+        imu (sensor_msgs/Imu): orientation, angular velocity and linear
+            acceleration at 20 Hz.
+    """
+
     def __init__(self):
         super().__init__('imu_node')
         self._logger = self.get_logger()

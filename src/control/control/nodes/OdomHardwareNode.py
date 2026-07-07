@@ -16,6 +16,26 @@ _RPM_TO_RAD_S = math.tau / 60.0   # 2π / 60
 _RPM_NOISE_FLOOR = 0.5             # RPM
 
 class OdomHardwareNode(Node):
+    """Wheel odometry from hoverboard encoder RPM (real-hardware variant).
+
+    Counterpart of OdomNode for the physical chair: instead of joint states it
+    integrates wheel RPM reported by HoverBoardNode. Applies an RPM dead-band to
+    reject hall-sensor noise at rest, converts RPM to wheel displacement, and
+    integrates a 2D pose via OdometryEvaluator. Wheel geometry comes from
+    wheelchair_config.yaml. Pose/twist covariances are pre-filled for use with
+    robot_localization.
+
+    Subscriptions:
+        /encoders (my_robot_interfaces/Encoders): left/right wheel speeds in RPM.
+
+    Publications:
+        odom (nav_msgs/Odometry): pose + twist in the 'odom' frame,
+            child frame 'base_footprint', published at 20 Hz.
+
+    TF broadcasts:
+        odom -> base_footprint transform at 20 Hz.
+    """
+
     def __init__(self):
         super().__init__('odom_node')
         self._logger = self.get_logger()
